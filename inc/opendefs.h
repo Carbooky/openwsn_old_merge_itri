@@ -95,6 +95,7 @@ enum {
    WKP_UDP_COAP                        =  5683,
    WKP_UDP_ECHO                        =     7,
    WKP_UDP_INJECT                      =  2000,
+   WKP_UDP_SAKI                        =  2424,
    WKP_UDP_RINGMASTER                  = 15000,
 };
 
@@ -170,6 +171,7 @@ enum {
    COMPONENT_UINJECT                   = 0x24,
    COMPONENT_RRT                       = 0x25,
    COMPONENT_SECURITY                  = 0x26,
+   COMPONENT_USAKI                     = 0x27,
 };
 
 /**

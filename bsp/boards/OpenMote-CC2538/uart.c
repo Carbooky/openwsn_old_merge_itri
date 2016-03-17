@@ -24,8 +24,8 @@
 
 //=========================== defines =========================================
 
-#define PIN_UART_RXD            GPIO_PIN_0 // PA0 is UART RX
-#define PIN_UART_TXD            GPIO_PIN_1 // PA1 is UART TX
+#define PIN_UART_RXD            GPIO_PIN_6 // PA0 is UART RX
+#define PIN_UART_TXD            GPIO_PIN_7 // PA1 is UART TX
 
 //=========================== variables =======================================
 

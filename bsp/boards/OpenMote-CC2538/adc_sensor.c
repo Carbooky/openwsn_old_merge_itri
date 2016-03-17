@@ -57,4 +57,36 @@ float adc_sens_convert_temperature(uint16_t cputemp) {
    return dOutputVoltage;
 }
 
+/**
+   \brief Read rough data from sensor
+   \param[out] ui16Dummy rough data.
+*/
+uint16_t adc_sens_read_temperature_PA0(void) {
+   uint16_t ui16Dummy;
+
+   SOCADCSingleStart(SOCADC_AIN0);
+   while(!SOCADCEndOfCOnversionGet());
+   ui16Dummy = SOCADCDataGet() >> SOCADC_12_BIT_RSHIFT;
+   return ui16Dummy;
+}
+
+uint16_t adc_sens_read_temperature_PA1(void) {
+   uint16_t ui16Dummy;
+
+   SOCADCSingleStart(SOCADC_AIN1);
+   while(!SOCADCEndOfCOnversionGet());
+   ui16Dummy = SOCADCDataGet() >> SOCADC_12_BIT_RSHIFT;
+   return ui16Dummy;
+}
+
+uint16_t adc_sens_read_VDD_voltage(void) {
+   uint16_t ui16Dummy;
+
+   SOCADCSingleStart(SOCADC_VDD);
+   while(!SOCADCEndOfCOnversionGet());
+   ui16Dummy = SOCADCDataGet() >> SOCADC_12_BIT_RSHIFT;
+   return ui16Dummy;
+}
+
+
 //=========================== private =========================================

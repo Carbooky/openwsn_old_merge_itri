@@ -5,6 +5,10 @@ import struct
 socket_handler = socket.socket(socket.AF_INET6,socket.SOCK_DGRAM)
 socket_handler.bind(('',2000))
 
+testb=100
+testa=102
+print 'testa=%d, testb=%d'.format(testa,testb)
+
 while True:
     
     # wait for a request
