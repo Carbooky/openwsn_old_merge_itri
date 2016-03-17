@@ -21,14 +21,35 @@ while True:
 
 #    counter        = struct.unpack('<h',data)[0]
     counter,data1,data2,data3,data4         = struct.unpack('HHHHH',data)
-    counter = counter & 0xff
     
     print 'len=%d, counter=%x, d1=%x, d2=%x, d3=%x, d4=%x' % (len(data),counter,data1,data2,data3,data4)
-
-    pure_value = data1;
+    #d1, inner temp
+    #d2, exter temp
+    #d3, pyra
+    #d4, volt
+    pure_value = data1
     temp_volt = pure_value * CONST
     i_temp_real = (temp_volt - OFFSET_0C) / TEMP_COEFF
-    print 'estimated temp = %2.2f' % i_temp_real
+    print 'internal temp = %2.2f' % i_temp_real
+
+
+    pure_value = data2;
+    temp_volt = pure_value * 1200 / 2048
+    temp_real = (temp_volt - 0.1678) / 12.223
+    print 'external temp = %2.2f' % temp_real
+    
+    pure_value = data3
+    if (pure_value > 2047):
+        pyra_real = 0
+        print 'detect estimated pyra < 0'
+    else:
+        pyra_volt = pure_value * 1200 / 2048
+        pyra_real = pyra_volt * 1000 / 1200
+        print 'estimated pyra = %d' % pyra_real    
+
+    pure_value = data4;
+    i_volt_real = pure_value / 364.5
+    print 'raw i_volt = %2.2f' % i_volt_real
     
     print 'received from [{0}]:{1} \
     '.format(hisAddress,hisPort)
