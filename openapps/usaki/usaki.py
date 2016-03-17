@@ -22,7 +22,7 @@ while True:
 #    counter        = struct.unpack('<h',data)[0]
     counter,data1,data2,data3,data4         = struct.unpack('HHHHH',data)
     
-    print 'len=%d, counter=%x, d1=%x, d2=%x, d3=%x, d4=%x' % (len(data),counter,data1,data2,data3,data4)
+    print 'len=%d, counter=%x, d1=%x, d2=%x, d3=%d, d4=%x' % (len(data),counter,data1,data2,data3,data4)
     #d1, inner temp
     #d2, exter temp
     #d3, pyra
@@ -33,7 +33,7 @@ while True:
     print 'internal temp = %2.2f' % i_temp_real
 
 
-    pure_value = data2;
+    pure_value = data2
     temp_volt = pure_value * 1200 / 2048
     temp_real = (temp_volt - 0.1678) / 12.223
     print 'external temp = %2.2f' % temp_real
@@ -47,7 +47,7 @@ while True:
         pyra_real = pyra_volt * 1000 / 1200
         print 'estimated pyra = %d' % pyra_real    
 
-    pure_value = data4;
+    pure_value = data4
     i_volt_real = pure_value / 364.5
     print 'raw i_volt = %2.2f' % i_volt_real
     
