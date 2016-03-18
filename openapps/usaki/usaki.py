@@ -1,5 +1,7 @@
 import socket
 import struct
+from datetime import datetime
+import MySQLdb
 
 CONST = 0.58134
 OFFSET_DATASHEET_25C = 827 #// 1422*CONST, from Datasheet
@@ -50,6 +52,37 @@ while True:
     pure_value = data4
     i_volt_real = pure_value / 364.5
     print 'raw i_volt = %2.2f' % i_volt_real
-    
+   
+    hisAddress_split = hisAddress.split(':')
+    address = ":".join(hisAddress_split[2:])
+    #print 'hisAddress=%s %s %s %s'%(hisAddress_split[2],hisAddress_split[3],hisAddress_split[4],hisAddress_split[5])
+
+    #open db connection 
+    db = MySQLdb.connect("localhost","root","sakimaru","ITRI_OpenWSN" )
+    cursor = db.cursor()
+
+    #get current time
+    t = datetime.now()
+    currtime = t.strftime("%Y-%m-%d %H:%M:%S")
+
+    #mySql cmd
+    sql = "INSERT INTO itri_MOEA_sensor(serialNumber, mac_addr, \
+		ext_temperature, pyranometer, datetime, int_temperature, battery_volt) \
+		VALUES ('%d', '%s', '%.2f', '%d', '%s', '%.2f', '%.2f')" %\
+		(counter, address, temp_real, pyra_real, currtime, i_temp_real, i_volt_real)
+    try:
+        # Execute the SQL command
+        cursor.execute(sql)
+        # Commit your changes in the database
+        db.commit()
+    except:
+        # Rollback in case there is any error
+        db.rollback()
+	
+    # disconnect from server
+    db.close()
+
+    print 'insert DB ok !!'
+
     print 'received from [{0}]:{1} \
     '.format(hisAddress,hisPort)
