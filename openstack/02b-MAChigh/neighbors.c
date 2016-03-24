@@ -9,6 +9,7 @@
 //=========================== variables =======================================
 
 neighbors_vars_t neighbors_vars;
+addrParents_vars_t addrParents_vars;
 
 //=========================== prototypes ======================================
 
@@ -596,6 +597,77 @@ bool debugPrint_neighbors() {
    openserial_printStatus(STATUS_NEIGHBORS,(uint8_t*)&temp,sizeof(debugNeighborEntry_t));
    return TRUE;
 }
+
+void neighbors_get3parents(uint8_t* ptr){
+        uint8_t   i;
+        uint8_t   numNeighbors;
+
+        numNeighbors = 0;
+        for (i=0; i<MAXNUMNEIGHBORS; i++) {
+                if (neighbors_vars.neighbors[i].used==TRUE){
+                memcpy( ptr,&(neighbors_vars.neighbors[i].addr_64b.addr_64b),LENGTH_ADDR64b);
+                ptr += LENGTH_ADDR64b;
+                memcpy( ptr,&(neighbors_vars.neighbors[i].DAGrank),sizeof(dagrank_t));
+                ptr += sizeof(dagrank_t);
+                memcpy( ptr,&(neighbors_vars.neighbors[i].numTx),sizeof(uint8_t));
+                ptr += sizeof(uint8_t);
+                memcpy( ptr,&(neighbors_vars.neighbors[i].numTxACK),sizeof(uint8_t));
+                ptr += sizeof(uint8_t);
+
+                numNeighbors++;
+                if(numNeighbors>3)
+                        break;
+                }
+        }
+}
+
+void neighbors_set2parents(uint8_t* ptr, uint8_t num){
+        if(num==2){
+                memcpy(&addrParents_vars.addrPrimary, ptr, LENGTH_ADDR64b);
+                memcpy(&addrParents_vars.addrBackup, ptr+8, LENGTH_ADDR64b);
+                addrParents_vars.usedPrimary = TRUE;
+                addrParents_vars.usedBackup  = TRUE;
+        }
+        else if(num==1){
+                memset(&addrParents_vars,0,sizeof(addrParents_vars));
+                memcpy(&addrParents_vars.addrPrimary, ptr, LENGTH_ADDR64b);
+                addrParents_vars.usedPrimary = TRUE;
+                addrParents_vars.usedBackup  = FALSE;
+        }
+        else{
+                memset(&addrParents_vars,0,sizeof(addrParents_vars));
+                addrParents_vars.usedPrimary = FALSE;
+                addrParents_vars.usedBackup  = FALSE;
+        }
+}
+
+bool neighbors_isDestRoot_Primary(open_addr_t* address) {
+        if( memcmp(address->addr_128b ,&ipAddr_Root, LENGTH_ADDR128b)==0 && addrParents_vars.usedPrimary==TRUE )
+                return TRUE;
+        else
+                return FALSE;
+}
+
+bool neighbors_getPrimary(open_addr_t* addressToWrite) {
+   if(addrParents_vars.usedPrimary == TRUE){
+           memcpy(&addressToWrite->addr_64b,&(addrParents_vars.addrPrimary),LENGTH_ADDR64b);
+           addressToWrite->type = ADDR_64B;
+           return TRUE;
+   }
+
+   return FALSE;
+}
+
+bool neighbors_getBackup(open_addr_t* addressToWrite) {
+   if(addrParents_vars.usedBackup == TRUE){
+           memcpy(&addressToWrite->addr_64b,&(addrParents_vars.addrBackup),LENGTH_ADDR64b);
+           addressToWrite->type = ADDR_64B;
+           return TRUE;
+   }
+
+   return FALSE;
+}
+
 
 //=========================== private =========================================
 

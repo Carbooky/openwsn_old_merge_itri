@@ -8,7 +8,7 @@
 #include "scheduler.h"
 #include "IEEE802154E.h"
 #include "idmanager.h"
-#include "neighbors.h"
+
 //=========================== variables =======================================
 
 uinject_vars_t uinject_vars;
@@ -17,11 +17,6 @@ static const uint8_t uinject_dst_addr[]   = {
    0xbb, 0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
 }; 
-
-/// code (1B), MyInfo (10 or 12B), Nbr1 (12B), Nbr2 (12B), Nbr3 (12B)
-#define UHURRICANEPAYLOADLEN      49
-
-#define USE_YYS_TOPOLOGY
 
 //=========================== prototypes ======================================
 
@@ -72,6 +67,7 @@ void uinject_timer_cb(opentimer_id_t id){
 
 void uinject_task_cb() {
    OpenQueueEntry_t*    pkt;
+   int i;
 
    // don't run if not synch
    if (ieee154e_isSynch() == FALSE) return;
@@ -83,13 +79,7 @@ void uinject_task_cb() {
    }
    
    // if you get here, send a packet
-#ifdef USE_YYS_TOPOLOGY
-   uint8_t              numNeighbor;
-   numNeighbor = neighbors_getNumNeighbors();
-   if(numNeighbor==0) return;
-
-
-#endif    
+   
    // get a free packet buffer
    pkt = openqueue_getFreePacketBuffer(COMPONENT_UINJECT);
    if (pkt==NULL) {
@@ -109,46 +99,14 @@ void uinject_task_cb() {
    pkt->l4_sourcePortORicmpv6Type     = WKP_UDP_INJECT;
    pkt->l3_destinationAdd.type        = ADDR_128B;
    memcpy(&pkt->l3_destinationAdd.addr_128b[0],uinject_dst_addr,16);
-
-#ifdef USE_YYS_TOPOLOGY
-   // Hurricane payload
-   uint8_t              code;
-   open_addr_t*         myadd64;
-   dagrank_t            rank;
-   uint16_t             residualEnergy;
-   uint8_t              uhurricanePayloadLen;
-
-   //uhurricanePayloadLen = UHURRICANEPAYLOADLEN - (3-numNeighbor)*12;
-   if (numNeighbor < 3)
-      uhurricanePayloadLen = 13 + numNeighbor*12;
-   else
-      uhurricanePayloadLen = UHURRICANEPAYLOADLEN;
-
-   packetfunctions_reserveHeaderSize(pkt,uhurricanePayloadLen);
-
-   code = 16 + numNeighbor;
-   memcpy(&(pkt->payload[ 0]),&code,sizeof(code));
-
-   myadd64                   = idmanager_getMyID(ADDR_64B);
-   memcpy(&(pkt->payload[ 1]),myadd64->addr_64b,sizeof(myadd64->addr_64b));
-
-   rank                      = neighbors_getMyDAGrank();
-   memcpy(&(pkt->payload[ 9]),&rank,sizeof(rank));
-
-   residualEnergy = 100;
-   memcpy(&(pkt->payload[11]),&residualEnergy,sizeof(residualEnergy));
-
-   neighbors_get3parents(&(pkt->payload[13]));
-
-#else
-   int i;
+   
    packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
    *((uint16_t*)&pkt->payload[0]) = uinject_vars.counter++;
 
    packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t)*24);
    for(i=0;i<24;i++)
    	*((uint16_t*)&pkt->payload[i*2]) = i;
-#endif   
+   
    if ((openudp_send(pkt))==E_FAIL) {
       openqueue_freePacketBuffer(pkt);
    }

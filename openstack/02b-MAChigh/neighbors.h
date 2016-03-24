@@ -69,6 +69,13 @@ typedef struct {
    icmpv6rpl_dio_ht*    dio; //keep it global to be able to debug correctly.
 } neighbors_vars_t;
 
+typedef struct {
+   bool               usedPrimary;
+   uint8_t            addrPrimary[8];
+   bool               usedBackup;
+   uint8_t            addrBackup[8];
+} addrParents_vars_t;
+
 //=========================== prototypes ======================================
 
 void          neighbors_init(void);
@@ -111,6 +118,15 @@ void          neighbors_updateMyDAGrankAndNeighborPreference(void);
 void          neighbors_removeOld(void);
 // debug
 bool          debugPrint_neighbors(void);
+
+void          neighbors_get3parents(uint8_t* ptr);
+void          neighbors_set2parents(uint8_t* ptr, uint8_t num);
+bool          neighbors_isDestRoot_Primary(open_addr_t* address);
+bool          neighbors_getPrimary(open_addr_t* addressToWrite);
+bool          neighbors_getBackup(open_addr_t* addressToWrite);
+
+static const uint8_t ipAddr_Root[] = {0xbb, 0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
+                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
 
 /**
 \}
