@@ -103,8 +103,8 @@ void uinject_task_cb() {
    packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
    *((uint16_t*)&pkt->payload[0]) = uinject_vars.counter++;
 
-   packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t)*20);
-   for(i=0;i<20;i++)
+   packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t)*24);
+   for(i=0;i<24;i++)
    	*((uint16_t*)&pkt->payload[i*2]) = i;
    
    if ((openudp_send(pkt))==E_FAIL) {

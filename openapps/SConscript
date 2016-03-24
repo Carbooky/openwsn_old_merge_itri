@@ -16,6 +16,7 @@ defaultApps   = [
     'uecho',
     'uinject',
     'rrt',
+    'usaki',
 ]
 if localEnv['board']=='python':
     defaultApps  += [
@@ -33,6 +34,7 @@ defaultAppsInit   = [
     'uecho',
     'rrt',
     'uinject',
+    'usaki',
 ]
 
 # additional apps the user wants to build
