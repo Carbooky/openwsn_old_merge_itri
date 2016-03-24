@@ -67,7 +67,8 @@ void uinject_timer_cb(opentimer_id_t id){
 
 void uinject_task_cb() {
    OpenQueueEntry_t*    pkt;
-   
+   int i;
+
    // don't run if not synch
    if (ieee154e_isSynch() == FALSE) return;
    
@@ -101,6 +102,10 @@ void uinject_task_cb() {
    
    packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
    *((uint16_t*)&pkt->payload[0]) = uinject_vars.counter++;
+
+   packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t)*20);
+   for(i=0;i<20;i++)
+   	*((uint16_t*)&pkt->payload[i*2]) = i;
    
    if ((openudp_send(pkt))==E_FAIL) {
       openqueue_freePacketBuffer(pkt);

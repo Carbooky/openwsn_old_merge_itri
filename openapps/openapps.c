@@ -41,6 +41,6 @@ void openapps_init(void) {
    techo_init();
    // UDP
    uecho_init();
-   usaki_init();
-   //uinject_init();
+   //usaki_init();
+   uinject_init();
 }
