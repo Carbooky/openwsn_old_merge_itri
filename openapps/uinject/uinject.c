@@ -9,6 +9,7 @@
 #include "IEEE802154E.h"
 #include "idmanager.h"
 #include "neighbors.h"
+#include "leds.h"
 //=========================== variables =======================================
 
 uinject_vars_t uinject_vars;
@@ -47,8 +48,69 @@ void uinject_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
    openqueue_freePacketBuffer(msg);
 }
 
-void uinject_receive(OpenQueueEntry_t* pkt) {
+void uinject_receive(OpenQueueEntry_t* request) {
+//   uint16_t          temp_l4_destination_port;
+//   OpenQueueEntry_t* reply;
+   uint8_t rcv_cmd;
+   uinject_recv_t * pkt = request;
+   const uint8_t uinject_info[] = "ITRI MOTE";
+
+/*
+   reply = openqueue_getFreePacketBuffer(COMPONENT_UINJECT);
+   if (reply==NULL) {
+      openserial_printError(
+         COMPONENT_UINJECT,
+         ERR_NO_FREE_PACKET_BUFFER,
+         (errorparameter_t)0,
+         (errorparameter_t)0
+      );
+      openqueue_freePacketBuffer(request); //clear the request packet as well
+      return;
+   }
+
+   reply->owner                         = COMPONENT_UINJECT;
+
+   // reply with the same OpenQueueEntry_t
+   reply->creator                       = COMPONENT_UINJECT;
+   reply->l4_protocol                   = IANA_UDP;
+   temp_l4_destination_port           = request->l4_destination_port;
+   reply->l4_destination_port           = request->l4_sourcePortORicmpv6Type;
+   reply->l4_sourcePortORicmpv6Type     = temp_l4_destination_port;
+   reply->l3_destinationAdd.type        = ADDR_128B;
    
+   // copy source to destination to echo.
+   memcpy(&reply->l3_destinationAdd.addr_128b[0],&request->l3_sourceAdd.addr_128b[0],16);
+
+   packetfunctions_reserveHeaderSize(reply,request->length);
+   //memcpy(&reply->payload[0],&request->payload[0],request->length);
+
+   if ((openudp_send(reply))==E_FAIL) {
+      openqueue_freePacketBuffer(reply);
+   }
+*/
+   rcv_cmd = pkt->cmdType;
+
+   switch(rcv_cmd){
+   UINJECT_GET_INFO:
+   break;
+   UINJECT_SET_PARENTS:
+   break;
+   UINJECT_SET_LED:
+     leds_debug_on();
+   break;
+   UINJECT_UNSET_LED:
+     leds_debug_off();
+   break;
+   UINJECT_TOGGLE_LED:
+     leds_debug_toggle();
+   break;
+   default:
+     leds_debug_toggle();
+   }
+
+   openqueue_freePacketBuffer(request);
+
+#if 0
    openqueue_freePacketBuffer(pkt);
    
    openserial_printError(
@@ -57,6 +119,8 @@ void uinject_receive(OpenQueueEntry_t* pkt) {
       (errorparameter_t)0,
       (errorparameter_t)0
    );
+#endif
+
 }
 
 //=========================== private =========================================
