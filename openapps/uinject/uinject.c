@@ -42,6 +42,9 @@ void uinject_init() {
       TIMER_PERIODIC,TIME_MS,
       uinject_timer_cb
    );
+   
+   uinject_vars.needAck = TRUE;
+   uinject_vars.reTxNum = 0;
 }
 
 void uinject_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
@@ -104,6 +107,12 @@ void uinject_receive(OpenQueueEntry_t* request) {
    UINJECT_TOGGLE_LED:
      leds_debug_toggle();
    break;
+   UINJECT_SET_ACK:
+     uinject_vars.needAck = TRUE;
+   break;
+   UINJECT_UNSET_ACK:
+     uinject_vars.needAck = FALSE;
+   break;
    default:
      leds_debug_toggle();
    }
@@ -145,7 +154,14 @@ void uinject_task_cb() {
       opentimers_stop(uinject_vars.timerId);
       return;
    }
-   
+
+   if(uinject_vars.needAck){
+      if (uinject_vars.reTxNum > UINJECT_RETRANSMIT_CNT){
+         uinject_vars.reTxNum = 0;
+         return;
+      }else
+         uinject_vars.reTxNum++;
+   }
    // if you get here, send a packet
 #ifdef USE_YYS_TOPOLOGY
    uint8_t              numNeighbor;
@@ -212,8 +228,35 @@ void uinject_task_cb() {
    packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t)*24);
    for(i=0;i<24;i++)
    	*((uint16_t*)&pkt->payload[i*2]) = i;
-#endif   
-   if ((openudp_send(pkt))==E_FAIL) {
+#endif  
+
+   // send out packet   
+   if ((openudp_send(pkt))==E_FAIL) 
       openqueue_freePacketBuffer(pkt);
+
+   // check resend
+   if(uinject_vars.needAck){
+      uinject_vars.rtnTimerId                 = opentimers_start(
+         UINJECT_WAIT_RSP_TIME,
+         TIMER_ONESHOT,TIME_MS,
+         uinject_timer_cb
+      );
    }
+#if 0
+   int reTransmitCnt = 0;
+   do {
+      if ((openudp_send(pkt))==E_FAIL) {
+         openqueue_freePacketBuffer(pkt);
+      }
+
+      //cpu_delay_s(3);
+
+      if(uinject_vars.counter == uinject_vars.rtnCounter)
+         break;
+
+      reTransmitCnt ++;
+   }while(uinject_vars.needAck && (reTransmitCnt <= UINJECT_RETRANSMIT_CNT));
+#endif
+
+
 }

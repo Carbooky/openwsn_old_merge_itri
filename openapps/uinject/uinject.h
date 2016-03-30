@@ -13,19 +13,24 @@
 //=========================== define ==========================================
 
 #define UINJECT_PERIOD_MS 40000
-
+#define UINJECT_RETRANSMIT_CNT 2
+#define UINJECT_WAIT_RSP_TIME 3000
 //=========================== typedef =========================================
 
 //=========================== variables =======================================
 
 typedef struct {
+   bool                 needAck;
    opentimer_id_t       timerId;  ///< periodic timer which triggers transmission
+   opentimer_id_t       rtnTimerId;  ///< periodic timer which triggers transmission
    uint16_t             counter;  ///< incrementing counter which is written into the packet
+   uint16_t             rtnCounter;
+   uint8_t              reTxNum;
 } uinject_vars_t;
 
 typedef struct {
    uint8_t       cmdType;
-   uint8_t       serialNum;
+   uint16_t       serialNum;
    union{
       uint8_t ctrlCmd;
       uint8_t setParents[16];
@@ -39,7 +44,10 @@ typedef enum UINJECT_CMD_TYPE{
   UINJECT_SET_TWO_PARENTS,
   UINJECT_SET_RETRANSMIT,
   UINJECT_UNSET_RETRANSMIT,
-  UINJECT_GET_INFO
+  UINJECT_GET_INFO,
+  UINJECT_ACK = 10,
+  UINJECT_SET_ACK,
+  UINJECT_UNSET_ACK
 }uinject_cmd_type_t;
 
 //=========================== prototypes ======================================
