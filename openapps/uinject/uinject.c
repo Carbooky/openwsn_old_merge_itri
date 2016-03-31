@@ -65,7 +65,7 @@ void uinject_receive(OpenQueueEntry_t* request) {
 //   uint16_t          temp_l4_destination_port;
 //   OpenQueueEntry_t* reply;
    uint8_t rcv_cmd;
-   uinject_recv_t * pkt = request;
+   uinject_recv_t * pkt = request->payload;
    const uint8_t uinject_info[] = "ITRI MOTE";
 
 /*
@@ -104,28 +104,30 @@ void uinject_receive(OpenQueueEntry_t* request) {
    rcv_cmd = pkt->cmdType;
 
    switch(rcv_cmd){
-   UINJECT_GET_INFO:
-   break;
-   UINJECT_SET_PARENTS:
-   break;
-   UINJECT_SET_LED:
-     leds_debug_on();
-   break;
-   UINJECT_UNSET_LED:
-     leds_debug_off();
-   break;
-   UINJECT_TOGGLE_LED:
-     leds_debug_toggle();
-   break;
-   UINJECT_SET_ACK:
-     uinject_vars.needAck = TRUE;
-   break;
-   UINJECT_UNSET_ACK:
-     uinject_vars.needAck = FALSE;
-   break;
-   default:
-     leds_debug_toggle();
+      case UINJECT_GET_INFO:
+      break;
+      case UINJECT_SET_PARENTS:
+      break;
+      case UINJECT_SET_LED:
+        leds_debug_on();
+      break;
+      case UINJECT_UNSET_LED:
+        leds_debug_off();
+      break;
+      case UINJECT_TOGGLE_LED:
+        leds_debug_toggle();
+      break;
+      case UINJECT_SET_ACK:
+        uinject_vars.needAck = TRUE;
+      break;
+      case UINJECT_UNSET_ACK:
+        uinject_vars.needAck = FALSE;
+      break;
+      default:
+        leds_debug_toggle();
    }
+
+   //openserial_printData(rcv_dataa, 3);
 
    openqueue_freePacketBuffer(request);
 
