@@ -615,7 +615,7 @@ void neighbors_get3parents(uint8_t* ptr){
                 ptr += sizeof(uint8_t);
 
                 numNeighbors++;
-                if(numNeighbors>3)
+                if(numNeighbors>=3)
                         break;
                 }
         }

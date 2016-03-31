@@ -22,6 +22,9 @@ static const uint8_t uinject_dst_addr[]   = {
 /// code (1B), MyInfo (10 or 12B), Nbr1 (12B), Nbr2 (12B), Nbr3 (12B)
 #define UHURRICANEPAYLOADLEN      49
 
+#define UINJECT_CODE_MASK_SHOWPOWER  4 
+#define UINJECT_CODE_MASK_NEEDACK    5
+
 #define USE_YYS_TOPOLOGY
 
 //=========================== prototypes ======================================
@@ -30,6 +33,11 @@ void uinject_timer_cb(opentimer_id_t id);
 void uinject_task_cb(void);
 
 //=========================== public ==========================================
+
+bool isAck(void){
+  
+  return (bool)(uinject_vars.rtnCounter == uinject_vars.counter);
+}
 
 void uinject_init() {
    
@@ -45,6 +53,8 @@ void uinject_init() {
    
    uinject_vars.needAck = TRUE;
    uinject_vars.reTxNum = 0;
+   uinject_vars.counter = 1;
+   uinject_vars.rtnCounter = 0;
 }
 
 void uinject_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
@@ -156,11 +166,17 @@ void uinject_task_cb() {
    }
 
    if(uinject_vars.needAck){
-      if (uinject_vars.reTxNum > UINJECT_RETRANSMIT_CNT){
+      if (isAck()){
          uinject_vars.reTxNum = 0;
+         leds_debug_toggle();
          return;
-      }else
-         uinject_vars.reTxNum++;
+      }else{
+         if (uinject_vars.reTxNum > UINJECT_RETRANSMIT_CNT){
+            uinject_vars.reTxNum = 0;
+            return;
+         }else
+            uinject_vars.reTxNum++;
+      }
    }
    // if you get here, send a packet
 #ifdef USE_YYS_TOPOLOGY
@@ -190,6 +206,11 @@ void uinject_task_cb() {
    pkt->l3_destinationAdd.type        = ADDR_128B;
    memcpy(&pkt->l3_destinationAdd.addr_128b[0],uinject_dst_addr,16);
 
+
+   // send counter value
+   packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
+   *((uint16_t*)&pkt->payload[0]) = uinject_vars.counter++;
+
 #ifdef USE_YYS_TOPOLOGY
    // Hurricane payload
    uint8_t              code;
@@ -204,9 +225,14 @@ void uinject_task_cb() {
    else
       uhurricanePayloadLen = UHURRICANEPAYLOADLEN;
 
+   //uhurricanePayloadLen += 2; // for counter
+
    packetfunctions_reserveHeaderSize(pkt,uhurricanePayloadLen);
 
-   code = 16 + numNeighbor;
+   //code = 16 + numNeighbor;
+   code = numNeighbor;
+   code |= 1 << UINJECT_CODE_MASK_SHOWPOWER;
+   code |= (uint8_t)uinject_vars.needAck << UINJECT_CODE_MASK_NEEDACK;
    memcpy(&(pkt->payload[ 0]),&code,sizeof(code));
 
    myadd64                   = idmanager_getMyID(ADDR_64B);
@@ -219,6 +245,9 @@ void uinject_task_cb() {
    memcpy(&(pkt->payload[11]),&residualEnergy,sizeof(residualEnergy));
 
    neighbors_get3parents(&(pkt->payload[13]));
+
+   //uinject_vars.counter ++;
+   //memcpy(&(pkt->payload[49]),&uinject_vars.counter,sizeof(uinject_vars.counter));
 
 #else
    int i;
