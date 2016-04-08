@@ -30,11 +30,12 @@ typedef struct {
 
 typedef struct {
    uint8_t       cmdType;
-   uint16_t       serialNum;
-   union{
-      uint8_t ctrlCmd;
-      uint8_t setParents[16];
-   }
+   uint8_t       serialNumL;
+   uint8_t       serialNumH;
+//   union{
+//      uint8_t ctrlCmd;
+//      uint8_t setParents[16];
+//   }
 } uinject_recv_t;
 
 typedef enum UINJECT_CMD_TYPE{
@@ -45,7 +46,7 @@ typedef enum UINJECT_CMD_TYPE{
   UINJECT_SET_RETRANSMIT,
   UINJECT_UNSET_RETRANSMIT,
   UINJECT_GET_INFO,
-  UINJECT_ACK = 10,
+  UINJECT_RSP_ACK = 10,
   UINJECT_SET_ACK,
   UINJECT_UNSET_ACK
 }uinject_cmd_type_t;

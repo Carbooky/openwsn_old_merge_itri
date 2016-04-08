@@ -36,7 +36,10 @@ void uinject_task_cb(void);
 
 bool isAck(void){
   
-  return (bool)(uinject_vars.rtnCounter == uinject_vars.counter);
+  if (uinject_vars.rtnCounter == uinject_vars.counter)
+    return TRUE;
+  else
+    return FALSE;
 }
 
 void uinject_init() {
@@ -51,7 +54,7 @@ void uinject_init() {
       uinject_timer_cb
    );
    
-   uinject_vars.needAck = TRUE;
+   uinject_vars.needAck = FALSE;
    uinject_vars.reTxNum = 0;
    uinject_vars.counter = 1;
    uinject_vars.rtnCounter = 0;
@@ -67,7 +70,7 @@ void uinject_receive(OpenQueueEntry_t* request) {
    uint8_t rcv_cmd;
    uinject_recv_t * pkt = request->payload;
    const uint8_t uinject_info[] = "ITRI MOTE";
-
+   uint16_t serialNum;
 /*
    reply = openqueue_getFreePacketBuffer(COMPONENT_UINJECT);
    if (reply==NULL) {
@@ -123,6 +126,15 @@ void uinject_receive(OpenQueueEntry_t* request) {
       case UINJECT_UNSET_ACK:
         uinject_vars.needAck = FALSE;
       break;
+      case UINJECT_RSP_ACK:
+        serialNum = pkt->serialNumH;
+        serialNum *= 256;
+        serialNum += pkt->serialNumL;
+        uinject_vars.rtnCounter = serialNum;
+        if(uinject_vars.rtnCounter < 10)
+          leds_debug_toggle();
+         
+      break;
       default:
         leds_debug_toggle();
    }
@@ -167,6 +179,7 @@ void uinject_task_cb() {
       return;
    }
 
+#if 0
    if(uinject_vars.needAck){
       if (isAck()){
          uinject_vars.reTxNum = 0;
@@ -180,6 +193,7 @@ void uinject_task_cb() {
             uinject_vars.reTxNum++;
       }
    }
+#endif
    // if you get here, send a packet
 #ifdef USE_YYS_TOPOLOGY
    uint8_t              numNeighbor;
@@ -209,9 +223,37 @@ void uinject_task_cb() {
    memcpy(&pkt->l3_destinationAdd.addr_128b[0],uinject_dst_addr,16);
 
 
-   // send counter value
-   packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
-   *((uint16_t*)&pkt->payload[0]) = uinject_vars.counter++;
+
+   if(uinject_vars.needAck){
+      if (isAck()){
+         uinject_vars.reTxNum = 0;
+         leds_debug_toggle();
+         uinject_vars.counter++;
+         openqueue_freePacketBuffer(pkt);
+         return;
+      }else{
+         if (uinject_vars.reTxNum > UINJECT_RETRANSMIT_CNT){
+            uinject_vars.reTxNum = 0;
+            uinject_vars.counter++;
+            openqueue_freePacketBuffer(pkt);
+            return;
+         }else
+            uinject_vars.reTxNum++;
+            // send previous SN
+            packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
+            *((uint16_t*)&pkt->payload[0]) = uinject_vars.counter;
+            uinject_vars.rtnTimerId                 = opentimers_start(
+              UINJECT_WAIT_RSP_TIME,
+              TIMER_ONESHOT,TIME_MS,
+              uinject_timer_cb
+            );
+      }
+   }else{
+      // send counter value
+      packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
+      *((uint16_t*)&pkt->payload[0]) = uinject_vars.counter;
+      uinject_vars.counter++; 
+   }
 
 #ifdef USE_YYS_TOPOLOGY
    // Hurricane payload
@@ -264,7 +306,7 @@ void uinject_task_cb() {
    // send out packet   
    if ((openudp_send(pkt))==E_FAIL) 
       openqueue_freePacketBuffer(pkt);
-
+#if 0
    // check resend
    if(uinject_vars.needAck){
       uinject_vars.rtnTimerId                 = opentimers_start(
@@ -273,6 +315,7 @@ void uinject_task_cb() {
          uinject_timer_cb
       );
    }
+#endif
 #if 0
    int reTransmitCnt = 0;
    do {
