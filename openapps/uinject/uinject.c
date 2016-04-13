@@ -195,6 +195,51 @@ void uinject_task_cb() {
    }
 #endif
    // if you get here, send a packet
+
+#if 1
+
+   pkt = openqueue_getFreePacketBuffer(COMPONENT_UINJECT);
+   if (pkt==NULL) {
+      openserial_printError(
+         COMPONENT_UINJECT,
+         ERR_NO_FREE_PACKET_BUFFER,
+         (errorparameter_t)0,
+         (errorparameter_t)0
+      );
+      return;
+   }
+   
+   pkt->owner                         = COMPONENT_UINJECT;
+   pkt->creator                       = COMPONENT_UINJECT;
+   pkt->l4_protocol                   = IANA_UDP;
+   pkt->l4_destination_port           = WKP_UDP_INJECT;
+   pkt->l4_sourcePortORicmpv6Type     = WKP_UDP_INJECT;
+   pkt->l3_destinationAdd.type        = ADDR_128B;
+   memcpy(&pkt->l3_destinationAdd.addr_128b[0],uinject_dst_addr,16);
+
+   open_addr_t tmp_addr;
+   uint8_t numTx, numTxAck, numPcnt;
+   uint16_t tmp_num = 255;
+
+   neighbors_getPreferredParentEui64(&tmp_addr);
+
+   if(my_neighbors_getTxTxAck(&tmp_addr, &numTx, &numTxAck)){
+     if (numTx !=0){
+        tmp_num *= numTxAck;
+        tmp_num /=numTx;
+        numPcnt = (uint8_t)(tmp_num & 0xff);
+        packetfunctions_reserveHeaderSize(pkt,3);
+        *((uint8_t*)&pkt->payload[0]) = numTxAck;
+        *((uint8_t*)&pkt->payload[1]) = numTx;
+        *((uint8_t*)&pkt->payload[2]) = numPcnt;
+
+        // send out packet   
+        if ((openudp_send(pkt))==E_FAIL) 
+           openqueue_freePacketBuffer(pkt);
+     }
+   }
+#else
+
 #ifdef USE_YYS_TOPOLOGY
    uint8_t              numNeighbor;
    numNeighbor = neighbors_getNumNeighbors();
@@ -332,5 +377,6 @@ void uinject_task_cb() {
    }while(uinject_vars.needAck && (reTransmitCnt <= UINJECT_RETRANSMIT_CNT));
 #endif
 
+#endif
 
 }

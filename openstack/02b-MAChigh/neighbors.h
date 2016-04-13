@@ -125,6 +125,8 @@ bool          neighbors_isDestRoot_Primary(open_addr_t* address);
 bool          neighbors_getPrimary(open_addr_t* addressToWrite);
 bool          neighbors_getBackup(open_addr_t* addressToWrite);
 
+bool my_neighbors_getTxTxAck(open_addr_t* macToCompare, uint8_t* numTx, uint8_t* numTxAck);
+
 static const uint8_t ipAddr_Root[] = {0xbb, 0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
 
