@@ -24,7 +24,6 @@ static const uint8_t uinject_dst_addr[]   = {
 
 #define UINJECT_CODE_MASK_SHOWPOWER  4 
 #define UINJECT_CODE_MASK_NEEDACK    5
-
 #define USE_YYS_TOPOLOGY
 
 //=========================== prototypes ======================================
@@ -169,6 +168,14 @@ void uinject_timer_cb(opentimer_id_t id){
 
 void uinject_task_cb() {
    OpenQueueEntry_t*    pkt;
+   uint8_t              code=0;
+   uint8_t              uinjectPayloadLen;
+   open_addr_t tmp_addr;
+   uint8_t numTx, numTxAck, numPcnt=0;
+   uint16_t tmp_num = 255;
+   uint8_t              numNeighbor;
+   uint8_t parentShortAddr[2];
+   dagrank_t rank;
 
    // don't run if not synch
    if (ieee154e_isSynch() == FALSE) return;
@@ -179,74 +186,6 @@ void uinject_task_cb() {
       return;
    }
 
-#if 0
-   if(uinject_vars.needAck){
-      if (isAck()){
-         uinject_vars.reTxNum = 0;
-         leds_debug_toggle();
-         return;
-      }else{
-         if (uinject_vars.reTxNum > UINJECT_RETRANSMIT_CNT){
-            uinject_vars.reTxNum = 0;
-            return;
-         }else
-            uinject_vars.reTxNum++;
-      }
-   }
-#endif
-   // if you get here, send a packet
-
-#if 1
-
-   pkt = openqueue_getFreePacketBuffer(COMPONENT_UINJECT);
-   if (pkt==NULL) {
-      openserial_printError(
-         COMPONENT_UINJECT,
-         ERR_NO_FREE_PACKET_BUFFER,
-         (errorparameter_t)0,
-         (errorparameter_t)0
-      );
-      return;
-   }
-   
-   pkt->owner                         = COMPONENT_UINJECT;
-   pkt->creator                       = COMPONENT_UINJECT;
-   pkt->l4_protocol                   = IANA_UDP;
-   pkt->l4_destination_port           = WKP_UDP_INJECT;
-   pkt->l4_sourcePortORicmpv6Type     = WKP_UDP_INJECT;
-   pkt->l3_destinationAdd.type        = ADDR_128B;
-   memcpy(&pkt->l3_destinationAdd.addr_128b[0],uinject_dst_addr,16);
-
-   open_addr_t tmp_addr;
-   uint8_t numTx, numTxAck, numPcnt;
-   uint16_t tmp_num = 255;
-
-   neighbors_getPreferredParentEui64(&tmp_addr);
-
-   if(my_neighbors_getTxTxAck(&tmp_addr, &numTx, &numTxAck)){
-     if (numTx !=0){
-        tmp_num *= numTxAck;
-        tmp_num /=numTx;
-        numPcnt = (uint8_t)(tmp_num & 0xff);
-        packetfunctions_reserveHeaderSize(pkt,3);
-        *((uint8_t*)&pkt->payload[0]) = numTxAck;
-        *((uint8_t*)&pkt->payload[1]) = numTx;
-        *((uint8_t*)&pkt->payload[2]) = numPcnt;
-
-        // send out packet   
-        if ((openudp_send(pkt))==E_FAIL) 
-           openqueue_freePacketBuffer(pkt);
-     }
-   }
-#else
-
-#ifdef USE_YYS_TOPOLOGY
-   uint8_t              numNeighbor;
-   numNeighbor = neighbors_getNumNeighbors();
-   if(numNeighbor==0) return;
-
-
-#endif    
    // get a free packet buffer
    pkt = openqueue_getFreePacketBuffer(COMPONENT_UINJECT);
    if (pkt==NULL) {
@@ -267,8 +206,7 @@ void uinject_task_cb() {
    pkt->l3_destinationAdd.type        = ADDR_128B;
    memcpy(&pkt->l3_destinationAdd.addr_128b[0],uinject_dst_addr,16);
 
-
-
+   // check re-transmit mechanism
    if(uinject_vars.needAck){
       if (isAck()){
          uinject_vars.reTxNum = 0;
@@ -300,83 +238,58 @@ void uinject_task_cb() {
       uinject_vars.counter++; 
    }
 
-#ifdef USE_YYS_TOPOLOGY
-   // Hurricane payload
-   uint8_t              code;
-   open_addr_t*         myadd64;
-   dagrank_t            rank;
-   uint16_t             residualEnergy;
-   uint8_t              uhurricanePayloadLen;
-
-   //uhurricanePayloadLen = UHURRICANEPAYLOADLEN - (3-numNeighbor)*12;
-   if (numNeighbor < 3)
-      uhurricanePayloadLen = 13 + numNeighbor*12;
-   else
-      uhurricanePayloadLen = UHURRICANEPAYLOADLEN;
-
-   //uhurricanePayloadLen += 2; // for counter
-
-   packetfunctions_reserveHeaderSize(pkt,uhurricanePayloadLen);
-
-   //code = 16 + numNeighbor;
-   code = numNeighbor;
-   code |= 1 << UINJECT_CODE_MASK_SHOWPOWER;
-   code |= (uint8_t)uinject_vars.needAck << UINJECT_CODE_MASK_NEEDACK;
-   memcpy(&(pkt->payload[ 0]),&code,sizeof(code));
-
-   myadd64                   = idmanager_getMyID(ADDR_64B);
-   memcpy(&(pkt->payload[ 1]),myadd64->addr_64b,sizeof(myadd64->addr_64b));
+   // find number of neighbors
+   numNeighbor = neighbors_getNumNeighbors();
+   if(numNeighbor==0) {
+      openqueue_freePacketBuffer(pkt);
+      return;
+   }
 
    rank                      = neighbors_getMyDAGrank();
-   memcpy(&(pkt->payload[ 9]),&rank,sizeof(rank));
 
-   residualEnergy = 100;
-   memcpy(&(pkt->payload[11]),&residualEnergy,sizeof(residualEnergy));
+   // get parent 64b addr
+   neighbors_getPreferredParentEui64(&tmp_addr);
+   
+   // assign parent short addr
+   memset(parentShortAddr,0,2);
+   if(tmp_addr.type == ADDR_64B)
+      memcpy(parentShortAddr, &tmp_addr.addr_64b[6], 2);
 
-   neighbors_get3parents(&(pkt->payload[13]));
+   // find PDR
+   if(my_neighbors_getTxTxAck(&tmp_addr, &numTx, &numTxAck)){
+     if ((numTx !=0)&&(numTx >= numTxAck)){
+        tmp_num *= numTxAck;
+        tmp_num /=numTx;
+        numPcnt = (uint8_t)(tmp_num & 0xff);
+     }
+   }
 
-   //uinject_vars.counter ++;
-   //memcpy(&(pkt->payload[49]),&uinject_vars.counter,sizeof(uinject_vars.counter));
+   // find code
+   code |= 1 << UINJECT_CODE_MASK_SHOWPOWER;
+   code |= (uint8_t)uinject_vars.needAck << UINJECT_CODE_MASK_NEEDACK;
 
-#else
-   int i;
-   packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
-   *((uint16_t*)&pkt->payload[0]) = uinject_vars.counter++;
+   // find total packet size, 5 = code/numPcnt/numNeighbor/ParentShortAddr
+   if (numNeighbor < MAX_ALLOW_NEIGHBORS)
+      uinjectPayloadLen = 7 + numNeighbor*2;
+   else
+      uinjectPayloadLen = 7 + MAX_ALLOW_NEIGHBORS*2;
 
-   packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t)*24);
-   for(i=0;i<24;i++)
-   	*((uint16_t*)&pkt->payload[i*2]) = i;
-#endif  
+   // allocate packet size
+   packetfunctions_reserveHeaderSize(pkt,uinjectPayloadLen);
+
+   *((uint8_t*)&pkt->payload[0]) = code;
+   *((uint8_t*)&pkt->payload[1]) = numPcnt;
+
+   memcpy(&pkt->payload[2],parentShortAddr,2);
+
+   memcpy(&(pkt->payload[4]),&rank,sizeof(rank));
+
+   *((uint8_t*)&pkt->payload[6]) = numNeighbor;
+
+   neighbors_getNshortAddr(&(pkt->payload[7]));
 
    // send out packet   
    if ((openudp_send(pkt))==E_FAIL) 
       openqueue_freePacketBuffer(pkt);
-#if 0
-   // check resend
-   if(uinject_vars.needAck){
-      uinject_vars.rtnTimerId                 = opentimers_start(
-         UINJECT_WAIT_RSP_TIME,
-         TIMER_ONESHOT,TIME_MS,
-         uinject_timer_cb
-      );
-   }
-#endif
-#if 0
-   int reTransmitCnt = 0;
-   do {
-      if ((openudp_send(pkt))==E_FAIL) {
-         openqueue_freePacketBuffer(pkt);
-      }
-
-      //cpu_delay_s(3);
-
-      if(uinject_vars.counter == uinject_vars.rtnCounter)
-         break;
-
-      reTransmitCnt ++;
-   }while(uinject_vars.needAck && (reTransmitCnt <= UINJECT_RETRANSMIT_CNT));
-#endif
-
-#endif
 
 }

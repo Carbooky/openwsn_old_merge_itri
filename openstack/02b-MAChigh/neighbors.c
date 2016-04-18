@@ -5,6 +5,7 @@
 #include "idmanager.h"
 #include "openserial.h"
 #include "IEEE802154E.h"
+#include "uinject.h"
 
 //=========================== variables =======================================
 
@@ -628,6 +629,23 @@ bool debugPrint_neighbors() {
    temp.neighborEntry=neighbors_vars.neighbors[neighbors_vars.debugRow];
    openserial_printStatus(STATUS_NEIGHBORS,(uint8_t*)&temp,sizeof(debugNeighborEntry_t));
    return TRUE;
+}
+
+void neighbors_getNshortAddr(uint8_t* ptr){
+        uint8_t   i;
+        uint8_t   numNeighbors;
+
+        numNeighbors = 0;
+        for (i=0; i<MAXNUMNEIGHBORS; i++) {
+                if (neighbors_vars.neighbors[i].used==TRUE){
+                memcpy( ptr,&(neighbors_vars.neighbors[i].addr_64b.addr_64b[6]),2);
+                ptr += 2;
+
+                numNeighbors++;
+                if(numNeighbors>=MAX_ALLOW_NEIGHBORS)
+                        break;
+                }
+        }
 }
 
 void neighbors_get3parents(uint8_t* ptr){

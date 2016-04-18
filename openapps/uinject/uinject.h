@@ -12,10 +12,11 @@
 
 //=========================== define ==========================================
 
-//#define UINJECT_PERIOD_MS 40000
-#define UINJECT_PERIOD_MS 10000
+#define UINJECT_PERIOD_MS 40000
+//#define UINJECT_PERIOD_MS 10000
 #define UINJECT_RETRANSMIT_CNT 2
 #define UINJECT_WAIT_RSP_TIME 3000
+#define MAX_ALLOW_NEIGHBORS          15
 //=========================== typedef =========================================
 
 //=========================== variables =======================================
