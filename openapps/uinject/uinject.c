@@ -24,6 +24,7 @@ static const uint8_t uinject_dst_addr[]   = {
 
 #define UINJECT_CODE_MASK_SHOWPOWER  4 
 #define UINJECT_CODE_MASK_NEEDACK    5
+#define UINJECT_CODE_MASK_WITHRSSI   6
 #define USE_YYS_TOPOLOGY
 
 //=========================== prototypes ======================================
@@ -266,13 +267,14 @@ void uinject_task_cb() {
 
    // find code
    code |= 1 << UINJECT_CODE_MASK_SHOWPOWER;
+   code |= 1 << UINJECT_CODE_MASK_WITHRSSI;
    code |= (uint8_t)uinject_vars.needAck << UINJECT_CODE_MASK_NEEDACK;
 
    // find total packet size, 5 = code/numPcnt/numNeighbor/ParentShortAddr
    if (numNeighbor < MAX_ALLOW_NEIGHBORS)
-      uinjectPayloadLen = 7 + numNeighbor*2;
+      uinjectPayloadLen = 7 + numNeighbor*3;
    else
-      uinjectPayloadLen = 7 + MAX_ALLOW_NEIGHBORS*2;
+      uinjectPayloadLen = 7 + MAX_ALLOW_NEIGHBORS*3;
 
    // allocate packet size
    packetfunctions_reserveHeaderSize(pkt,uinjectPayloadLen);
@@ -286,7 +288,7 @@ void uinject_task_cb() {
 
    *((uint8_t*)&pkt->payload[6]) = numNeighbor;
 
-   neighbors_getNshortAddr(&(pkt->payload[7]));
+   neighbors_getNshortAddrnRSSI(&(pkt->payload[7]));
 
    // send out packet   
    if ((openudp_send(pkt))==E_FAIL) 

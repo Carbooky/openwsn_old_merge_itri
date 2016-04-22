@@ -631,7 +631,7 @@ bool debugPrint_neighbors() {
    return TRUE;
 }
 
-void neighbors_getNshortAddr(uint8_t* ptr){
+void neighbors_getNshortAddrnRSSI(uint8_t* ptr){
         uint8_t   i;
         uint8_t   numNeighbors;
 
@@ -640,6 +640,9 @@ void neighbors_getNshortAddr(uint8_t* ptr){
                 if (neighbors_vars.neighbors[i].used==TRUE){
                 memcpy( ptr,&(neighbors_vars.neighbors[i].addr_64b.addr_64b[6]),2);
                 ptr += 2;
+
+                memcpy( ptr,&(neighbors_vars.neighbors[i].rssi),1);
+                ptr++;
 
                 numNeighbors++;
                 if(numNeighbors>=MAX_ALLOW_NEIGHBORS)
