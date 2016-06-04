@@ -18,6 +18,8 @@
 
 //=========================== variables =======================================
 
+extern uint16_t usaki_pulse_cnt;
+
 typedef struct {
    opentimer_id_t       timerId;  ///< periodic timer which triggers transmission
    uint16_t             counter;  ///< incrementing counter which is written into the packet
@@ -25,6 +27,7 @@ typedef struct {
    uint16_t             ext_temp;
    uint16_t             ext_pyra;
    uint16_t             int_volt;
+   uint16_t		gpio_pulse;
 } usaki_vars_t;
 
 //=========================== prototypes ======================================

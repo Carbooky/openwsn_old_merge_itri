@@ -14,6 +14,7 @@
 //=========================== variables =======================================
 
 usaki_vars_t usaki_vars;
+uint16_t usaki_pulse_cnt=0;
 
 static const uint8_t usaki_dst_addr[]   = {
    0xbb, 0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -90,6 +91,8 @@ void usaki_task_cb() {
    usaki_vars.int_temp = adc_sens_read_temperature();
    // show voltage
    usaki_vars.int_volt = adc_sens_read_VDD_voltage();
+   // get pulse count on gpio
+   usaki_vars.gpio_pulse = usaki_pulse_cnt;
    
    // get a free packet buffer
    pkt = openqueue_getFreePacketBuffer(COMPONENT_USAKI);
@@ -111,12 +114,13 @@ void usaki_task_cb() {
    pkt->l3_destinationAdd.type        = ADDR_128B;
    memcpy(&pkt->l3_destinationAdd.addr_128b[0],usaki_dst_addr,16);
    
-   packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t)*5);
+   packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t)*6);
    *((uint16_t*)&pkt->payload[0]) = usaki_vars.counter++;
    *((uint16_t*)&pkt->payload[2]) = usaki_vars.int_temp;
    *((uint16_t*)&pkt->payload[4]) = usaki_vars.ext_temp;
    *((uint16_t*)&pkt->payload[6]) = usaki_vars.ext_pyra;
    *((uint16_t*)&pkt->payload[8]) = usaki_vars.int_volt;
+   *((uint16_t*)&pkt->payload[10]) = usaki_vars.gpio_pulse;
    
    if ((openudp_send(pkt))==E_FAIL) {
       openqueue_freePacketBuffer(pkt);

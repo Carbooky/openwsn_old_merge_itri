@@ -666,6 +666,25 @@ GPIOPinTypeGPIOInput(uint32_t ui32Port, uint8_t ui8Pins)
     IOCPadConfigSet(ui32Port, ui8Pins, IOC_OVERRIDE_DIS);
 }
 
+void
+my_GPIOPinTypeGPIOInput(uint32_t ui32Port, uint8_t ui8Pins)
+{
+    //
+    // Check the arguments.
+    //
+    ASSERT(GPIOBaseValid(ui32Port));
+
+    //
+    // Make the pin(s) be inputs.
+    //
+    GPIODirModeSet(ui32Port, ui8Pins, GPIO_DIR_MODE_IN);
+
+    //
+    // Set the pad(s) to no override of the drive type.
+    //
+    IOCPadConfigSet(ui32Port, ui8Pins, IOC_OVERRIDE_PUE);
+}
+
 //*****************************************************************************
 //
 //! Configures pin(s) for use as GPIO outputs

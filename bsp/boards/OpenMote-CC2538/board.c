@@ -40,6 +40,9 @@
 
 //=========================== prototypes ======================================
 
+// usaki_pulse_cnt is from openapp/usaki/usaki.c
+extern uint16_t usaki_pulse_cnt;
+
 void antenna_init(void);
 void antenna_internal(void);
 void antenna_external(void);
@@ -51,14 +54,16 @@ bool board_timer_expired(uint32_t future);
 
 static void clock_init(void);
 static void gpio_init(void);
-static void button_init(void);
+//static void button_init(void);
+static void button_my_init(void);
 
 static void SysCtrlDeepSleepSetting(void);
 static void SysCtrlSleepSetting(void);
 static void SysCtrlRunSetting(void);
 static void SysCtrlWakeupSetting(void);
 
-static void GPIO_C_Handler(void);
+//static void GPIO_C_Handler(void);
+static void GPIO_Cp3_Handler(void);
 
 //=========================== main ============================================
 
@@ -82,6 +87,7 @@ void board_init(void) {
    leds_init();
    debugpins_init();
    //button_init();
+   button_my_init();
    bsp_timer_init();
    radiotimer_init();
    uart_init();
@@ -230,6 +236,7 @@ static void clock_init(void) {
     }
 }
 
+#if 0
 /**
  * Configures the user button as input source
  */
@@ -245,6 +252,29 @@ static void button_init(void) {
 
     /* Register the interrupt */
     GPIOPortIntRegister(BSP_BUTTON_BASE, GPIO_C_Handler);
+
+    /* Clear and enable the interrupt */
+    GPIOPinIntClear(BSP_BUTTON_BASE, BSP_BUTTON_USER);
+    GPIOPinIntEnable(BSP_BUTTON_BASE, BSP_BUTTON_USER);
+}
+#endif
+
+static void button_my_init(void) {
+    volatile uint32_t i;
+
+    // initial the debug led to on, should be PC6
+    leds_debug_on();
+
+    /* Delay to avoid pin floating problems */
+    for (i = 0xFFFF; i != 0; i--);
+
+    leds_debug_off();
+    /* The button is an input GPIO on falling edge */
+    GPIOPinTypeGPIOInput(BSP_BUTTON_BASE, BSP_BUTTON_USER);
+    GPIOIntTypeSet(BSP_BUTTON_BASE, BSP_BUTTON_USER, GPIO_FALLING_EDGE);
+
+    /* Register the interrupt */
+    GPIOPortIntRegister(BSP_BUTTON_BASE, GPIO_Cp3_Handler);
 
     /* Clear and enable the interrupt */
     GPIOPinIntClear(BSP_BUTTON_BASE, BSP_BUTTON_USER);
@@ -326,12 +356,13 @@ static void SysCtrlWakeupSetting(void) {
   GPIOIntWakeupEnable(GPIO_IWE_SM_TIMER);
 }
 
+#if 0
 //=========================== interrupt handlers ==============================
-
 /**
  * GPIO_C interrupt handler. User button is GPIO_C_3
  * Erases a Flash sector to trigger the bootloader backdoor
  */
+
 static void GPIO_C_Handler(void) {
     /* Disable the interrupts */
     IntMasterDisable();
@@ -341,4 +372,14 @@ static void GPIO_C_Handler(void) {
 
     /* Reset the board */
     SysCtrlReset();
+}
+#endif 
+
+static void GPIO_Cp3_Handler(void) {
+    /* Disable the interrupts */
+    // real process
+    leds_debug_toggle(); 
+    usaki_pulse_cnt ++;
+
+    GPIOPinIntClear(BSP_BUTTON_BASE, BSP_BUTTON_USER);
 }

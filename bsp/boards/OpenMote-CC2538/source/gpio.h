@@ -138,6 +138,7 @@ extern void GPIOPinWrite(uint32_t ui32Port, uint8_t ui8Pins,
                          uint8_t ui8Val);
 
 extern void GPIOPinTypeGPIOInput(uint32_t ui32Port, uint8_t ui8Pins);
+extern void my_GPIOPinTypeGPIOInput(uint32_t ui32Port, uint8_t ui8Pins);
 extern void GPIOPinTypeGPIOOutput(uint32_t ui32Port, uint8_t ui8Pins);
 extern void GPIOPinTypeI2C(uint32_t ui32Port, uint8_t ui8Pins);
 extern void GPIOPinTypeSSI(uint32_t ui32Port, uint8_t ui8Pins);
