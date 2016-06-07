@@ -8,12 +8,13 @@
 #include "scheduler.h"
 #include "IEEE802154E.h"
 #include "idmanager.h"
-
 #include "adc_sensor.h"
 
+#include "my_common.h"
 //=========================== variables =======================================
 
 usaki_vars_t usaki_vars;
+extern uinject_vars_t uinject_vars;
 uint16_t usaki_pulse_cnt=0;
 
 static const uint8_t usaki_dst_addr[]   = {
@@ -32,10 +33,13 @@ void usaki_init() {
    
    // clear local variables
    memset(&usaki_vars,0,sizeof(usaki_vars_t));
+
+   uinject_vars.usaki_period_time = UPLOAD_PERIOD_TIME_45MS;
+   uinject_vars.usaki_period_time_code = USAKI_SET_ULTIME_45_ABS;
    
    // start periodic timer
    usaki_vars.timerId                    = opentimers_start(
-      UINJECT_PERIOD_MS,
+      uinject_vars.usaki_period_time,
       TIMER_PERIODIC,TIME_MS,
       usaki_timer_cb
    );

@@ -18,8 +18,7 @@
 #include "techo.h"
 // UDP
 #include "uecho.h"
-#include "uinject.h"
-#include "usaki.h"
+#include "my_common.h"
 
 //=========================== variables =======================================
 

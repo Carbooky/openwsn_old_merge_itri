@@ -7,7 +7,7 @@
 // applications
 #include "opencoap.h"
 #include "uecho.h"
-#include "uinject.h"
+#include "my_common.h"
 #include "rrt.h"
 
 //=========================== variables =======================================

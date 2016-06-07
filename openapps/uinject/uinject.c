@@ -1,5 +1,5 @@
 #include "opendefs.h"
-#include "uinject.h"
+//#include "uinject.h"
 #include "openudp.h"
 #include "openqueue.h"
 #include "opentimers.h"
@@ -10,8 +10,10 @@
 #include "idmanager.h"
 #include "neighbors.h"
 #include "leds.h"
+#include "my_common.h"
 //=========================== variables =======================================
 
+extern usaki_vars_t usaki_vars;
 uinject_vars_t uinject_vars;
 
 static const uint8_t uinject_dst_addr[]   = {
@@ -22,6 +24,8 @@ static const uint8_t uinject_dst_addr[]   = {
 /// code (1B), MyInfo (10 or 12B), Nbr1 (12B), Nbr2 (12B), Nbr3 (12B)
 #define UHURRICANEPAYLOADLEN      49
 
+#define USAKI_CODE_LOC_ULTIME 0
+#define UINJECT_CODE_LOC_ULTIME 2
 #define UINJECT_CODE_MASK_SHOWPOWER  4 
 #define UINJECT_CODE_MASK_NEEDACK    5
 #define UINJECT_CODE_MASK_WITHRSSI   6
@@ -46,22 +50,120 @@ void uinject_init() {
    
    // clear local variables
    memset(&uinject_vars,0,sizeof(uinject_vars_t));
-   
-   // start periodic timer
-   uinject_vars.timerId                    = opentimers_start(
-      UINJECT_PERIOD_MS,
-      TIMER_PERIODIC,TIME_MS,
-      uinject_timer_cb
-   );
-   
+
+   // initial some variables
    uinject_vars.needAck = FALSE;
    uinject_vars.reTxNum = 0;
    uinject_vars.counter = 1;
    uinject_vars.rtnCounter = 0;
+   uinject_vars.uinject_period_time = UPLOAD_PERIOD_TIME_45MS;
+   uinject_vars.uinject_period_time_code = UINJECT_SET_ULTIME_45_ABS;
+   
+   // start periodic timer
+   uinject_vars.timerId                    = opentimers_start(
+      uinject_vars.uinject_period_time,
+      TIMER_PERIODIC,TIME_MS,
+      uinject_timer_cb
+   );
 }
 
 void uinject_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
    openqueue_freePacketBuffer(msg);
+}
+
+int uinject_change_upload_time(uint8_t new_time_code, opentimer_id_t id){
+  uint32_t new_duration;
+
+  if ((new_time_code > UINJECT_SET_ULTIME_90_ABS)||(new_time_code < UINJECT_SET_ULTIME_5_ABS)){
+    return -1;
+  }
+
+  switch(new_time_code){
+    case UINJECT_SET_ULTIME_5:
+    case UINJECT_SET_ULTIME_5_ABS:
+      new_duration = UPLOAD_PERIOD_TIME_5MS;
+    break;
+    case UINJECT_SET_ULTIME_15:
+      new_duration = UPLOAD_PERIOD_TIME_15MS;
+    break;
+    case UINJECT_SET_ULTIME_20:
+    case UINJECT_SET_ULTIME_20_ABS:
+      new_duration = UPLOAD_PERIOD_TIME_20MS;
+    break;
+    case UINJECT_SET_ULTIME_30:
+      new_duration = UPLOAD_PERIOD_TIME_30MS;
+    break;
+    case UINJECT_SET_ULTIME_45:
+    case UINJECT_SET_ULTIME_45_ABS:
+      new_duration = UPLOAD_PERIOD_TIME_45MS;
+    break;
+    case UINJECT_SET_ULTIME_60:
+      new_duration = UPLOAD_PERIOD_TIME_60MS;
+    break;
+    case UINJECT_SET_ULTIME_90_ABS:
+      new_duration = UPLOAD_PERIOD_TIME_90MS;
+    break;
+    case UINJECT_SET_ULTIME_180:
+      new_duration = UPLOAD_PERIOD_TIME_180MS;
+    break;
+    case UINJECT_SET_ULTIME_DEF:
+      new_duration = UPLOAD_PERIOD_TIME_45MS;
+    break;
+    default:
+      new_duration = UPLOAD_PERIOD_TIME_45MS;
+  }
+
+  opentimers_setPeriod(id, TIME_MS, new_duration);
+
+  return 1;
+}
+
+int usaki_change_upload_time(uint8_t new_time_code, opentimer_id_t id){
+  uint32_t new_duration;
+
+  if ((new_time_code > USAKI_SET_ULTIME_90_ABS)||(new_time_code < USAKI_SET_ULTIME_5_ABS)){
+    return -1;
+  }
+
+  switch(new_time_code){
+    case USAKI_SET_ULTIME_5:
+    case USAKI_SET_ULTIME_5_ABS:
+      new_duration = UPLOAD_PERIOD_TIME_5MS;
+    break;
+    case USAKI_SET_ULTIME_15:
+      new_duration = UPLOAD_PERIOD_TIME_15MS;
+    break;
+    case USAKI_SET_ULTIME_20:
+    case USAKI_SET_ULTIME_20_ABS:
+      new_duration = UPLOAD_PERIOD_TIME_20MS;
+    break;
+    case USAKI_SET_ULTIME_30:
+      new_duration = UPLOAD_PERIOD_TIME_30MS;
+    break;
+    case USAKI_SET_ULTIME_45:
+    case USAKI_SET_ULTIME_45_ABS:
+      new_duration = UPLOAD_PERIOD_TIME_45MS;
+    break;
+    case USAKI_SET_ULTIME_60:
+      new_duration = UPLOAD_PERIOD_TIME_60MS;
+    break;
+    case USAKI_SET_ULTIME_90:
+    case USAKI_SET_ULTIME_90_ABS:
+      new_duration = UPLOAD_PERIOD_TIME_90MS;
+    break;
+    case USAKI_SET_ULTIME_180:
+      new_duration = UPLOAD_PERIOD_TIME_180MS;
+    break;
+    case USAKI_SET_ULTIME_DEF:
+      new_duration = UPLOAD_PERIOD_TIME_30MS;
+    break;
+    default:
+      new_duration = UPLOAD_PERIOD_TIME_30MS;
+  }
+
+  opentimers_setPeriod(id, TIME_MS, new_duration);
+
+  return 1;
 }
 
 void uinject_receive(OpenQueueEntry_t* request) {
@@ -133,7 +235,16 @@ void uinject_receive(OpenQueueEntry_t* request) {
         uinject_vars.rtnCounter = serialNum;
         if(uinject_vars.rtnCounter < 10)
           leds_debug_toggle();
-         
+      break;
+      case UINJECT_SET_UPLOAD_TIME:
+        uinject_change_upload_time(pkt->serialNumL, uinject_vars.timerId);
+        uinject_vars.uinject_period_time_code = pkt->serialNumL;
+        leds_debug_toggle();
+      break;
+      case USAKI_SET_UPLOAD_TIME:
+        usaki_change_upload_time(pkt->serialNumL, usaki_vars.timerId);
+        uinject_vars.usaki_period_time_code = pkt->serialNumL;
+        leds_debug_toggle();
       break;
       default:
         leds_debug_toggle();
@@ -170,6 +281,7 @@ void uinject_timer_cb(opentimer_id_t id){
 void uinject_task_cb() {
    OpenQueueEntry_t*    pkt;
    uint8_t              code=0;
+   uint8_t              tmp_mask;
    uint8_t              uinjectPayloadLen;
    open_addr_t tmp_addr;
    uint8_t numTx, numTxAck, numPcnt=0;
@@ -268,7 +380,19 @@ void uinject_task_cb() {
    // find code
    code |= 1 << UINJECT_CODE_MASK_SHOWPOWER;
    code |= 1 << UINJECT_CODE_MASK_WITHRSSI;
+   tmp_mask = 1 << UINJECT_CODE_MASK_NEEDACK;
+   code &= ~tmp_mask;
    code |= (uint8_t)uinject_vars.needAck << UINJECT_CODE_MASK_NEEDACK;
+   // update upload time value
+   tmp_mask = 0xfc << UINJECT_CODE_LOC_ULTIME;
+   code &= tmp_mask;
+   tmp_mask = uinject_vars.uinject_period_time_code << UINJECT_CODE_LOC_ULTIME;
+   code |= tmp_mask;
+
+   tmp_mask = 0xfc << USAKI_CODE_LOC_ULTIME;
+   code &= tmp_mask;
+   tmp_mask = uinject_vars.usaki_period_time_code << USAKI_CODE_LOC_ULTIME;
+   code |= tmp_mask;
 
    // find total packet size, 5 = code/numPcnt/numNeighbor/ParentShortAddr
    if (numNeighbor < MAX_ALLOW_NEIGHBORS)
