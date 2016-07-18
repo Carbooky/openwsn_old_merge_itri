@@ -129,4 +129,7 @@ void usaki_task_cb() {
    if ((openudp_send(pkt))==E_FAIL) {
       openqueue_freePacketBuffer(pkt);
    }
+   
+   my_openserial_printStatus(0x12, "TEST", 4);
+
 }

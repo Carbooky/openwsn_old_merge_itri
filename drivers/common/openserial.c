@@ -91,6 +91,32 @@ void openserial_init() {
                      isr_openserial_rx);
 }
 
+
+owerror_t openserial_printStatus(uint8_t statusElement,uint8_t* buffer, uint8_t length) {
+
+   return E_SUCCESS;
+}
+
+owerror_t my_openserial_printStatus(uint8_t statusElement,uint8_t* buffer, uint8_t length) {
+   uint8_t i;
+   INTERRUPT_DECLARATION();
+   
+   DISABLE_INTERRUPTS();
+   openserial_vars.outputBufFilled  = TRUE;
+   outputHdlcOpen();
+   outputHdlcWrite(0x11);
+   outputHdlcWrite(idmanager_getMyID(ADDR_16B)->addr_16b[0]);
+   outputHdlcWrite(idmanager_getMyID(ADDR_16B)->addr_16b[1]);
+   outputHdlcWrite(statusElement);
+   for (i=0;i<length;i++){
+      outputHdlcWrite(buffer[i]);
+   }
+   outputHdlcClose();
+   ENABLE_INTERRUPTS();
+   
+   return E_SUCCESS;
+}
+#if 0
 owerror_t openserial_printStatus(uint8_t statusElement,uint8_t* buffer, uint8_t length) {
    uint8_t i;
    INTERRUPT_DECLARATION();
@@ -110,6 +136,7 @@ owerror_t openserial_printStatus(uint8_t statusElement,uint8_t* buffer, uint8_t 
    
    return E_SUCCESS;
 }
+#endif
 
 owerror_t openserial_printInfoErrorCritical(
       char             severity,

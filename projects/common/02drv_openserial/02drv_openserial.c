@@ -53,6 +53,7 @@ int mote_main(void) {
    
    board_init();
    openserial_init();
+
    
    bsp_timer_set_callback(cb_compare);
    bsp_timer_scheduleIn(BSP_TIMER_PERIOD);
