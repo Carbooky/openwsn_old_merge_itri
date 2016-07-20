@@ -325,7 +325,7 @@ void openserial_startInput() {
    );
    openserial_vars.reqFrameIdx = sizeof(openserial_vars.reqFrame);
 #else
-   uart_writeByte(openserial_vars.reqFrame[openserial_vars.reqFrameIdx]);
+   //uart_writeByte(openserial_vars.reqFrame[openserial_vars.reqFrameIdx]);
 #endif
    ENABLE_INTERRUPTS();
 }

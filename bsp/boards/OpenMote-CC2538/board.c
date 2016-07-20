@@ -26,6 +26,7 @@
 #include "flash.h"
 #include "i2c.h"
 #include "sensors.h"
+#include "my_spi.h"
 
 //=========================== variables =======================================
 
@@ -94,6 +95,7 @@ void board_init(void) {
    radio_init();
    i2c_init();
    sensors_init();
+   my_SPI_init();
 }
 
 /**
