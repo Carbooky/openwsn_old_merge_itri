@@ -11,6 +11,8 @@
 #include "adc_sensor.h"
 
 #include "my_common.h"
+#include "my_spi.h"
+#include <headers/hw_memmap.h>
 //=========================== variables =======================================
 
 usaki_vars_t usaki_vars;
@@ -34,8 +36,8 @@ void usaki_init() {
    // clear local variables
    memset(&usaki_vars,0,sizeof(usaki_vars_t));
 
-   uinject_vars.usaki_period_time = UPLOAD_PERIOD_TIME_45MS;
-   uinject_vars.usaki_period_time_code = USAKI_SET_ULTIME_45_ABS;
+   uinject_vars.usaki_period_time = UPLOAD_PERIOD_TIME_20MS;
+   uinject_vars.usaki_period_time_code = USAKI_SET_ULTIME_20_ABS;
    
    // start periodic timer
    usaki_vars.timerId                    = opentimers_start(
@@ -74,7 +76,8 @@ void usaki_timer_cb(opentimer_id_t id){
 
 void usaki_task_cb() {
    OpenQueueEntry_t*    pkt;
-   
+   uint8_t send_buf[10];
+
    // don't run if not synch
    if (ieee154e_isSynch() == FALSE) return;
    
@@ -129,7 +132,25 @@ void usaki_task_cb() {
    if ((openudp_send(pkt))==E_FAIL) {
       openqueue_freePacketBuffer(pkt);
    }
+
+/*
+   memset(send_buf,0,10);
    
-   my_openserial_printStatus(0x12, "TEST", 4);
+   if(usaki_vars.counter == 1){
+     send_buf[5] = 0x06;
+     CC1200WriteReg(CC120X_IOCFG2, &(send_buf[5]), 1);
+   }
+   else if(usaki_vars.counter == 2)  
+     send_buf[3] = my_SPI_recv(CC120X_IOCFG2); 
+   else
+     send_buf[3] = my_SPI_recv(CC120X_IOCFG2); 
+        
+   send_buf[0]=0x11;
+   send_buf[1]=0x11;
+   send_buf[2]=0x11;
+   send_buf[4]=usaki_vars.counter;
+
+   my_openserial_printStatus(0x14, send_buf, 5);
+*/
 
 }

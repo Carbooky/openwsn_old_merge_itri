@@ -15,7 +15,8 @@
 //=========================== defines =========================================
 // Board dbPINS defines
 #define BSP_PINA_BASE           GPIO_A_BASE
-#define BSP_PIND_BASE           GPIO_D_BASE
+//#define BSP_PIND_BASE           GPIO_D_BASE
+#define BSP_PIND_BASE           GPIO_C_BASE
 
 #define BSP_PINA_4              GPIO_PIN_4      //!< PA4 -- frame -RF1.5
 #define BSP_PINA_5              GPIO_PIN_5      //!< PA5 -- isr   -RF1.11

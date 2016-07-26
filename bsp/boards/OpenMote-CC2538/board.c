@@ -26,11 +26,13 @@
 #include "flash.h"
 #include "i2c.h"
 #include "sensors.h"
+#include "ssi.h"
 #include "my_spi.h"
 
 //=========================== variables =======================================
 
-#define BSP_ANTENNA_BASE                ( GPIO_D_BASE )
+//#define BSP_ANTENNA_BASE                ( GPIO_D_BASE )
+#define BSP_ANTENNA_BASE                ( GPIO_C_BASE )
 #define BSP_ANTENNA_INT                 ( GPIO_PIN_5 )
 #define BSP_ANTENNA_EXT                 ( GPIO_PIN_4 )
 
@@ -42,7 +44,7 @@
 //=========================== prototypes ======================================
 
 // usaki_pulse_cnt is from openapp/usaki/usaki.c
-extern uint16_t usaki_pulse_cnt;
+//extern uint16_t usaki_pulse_cnt;
 
 void antenna_init(void);
 void antenna_internal(void);
@@ -66,6 +68,8 @@ static void SysCtrlWakeupSetting(void);
 //static void GPIO_C_Handler(void);
 static void GPIO_Cp3_Handler(void);
 
+//static void my_SPI_init(void);
+
 //=========================== main ============================================
 
 extern int mote_main(void);
@@ -77,6 +81,7 @@ int main(void) {
 //=========================== public ==========================================
 
 void board_init(void) {
+
    gpio_init();
    clock_init();
 
@@ -93,8 +98,8 @@ void board_init(void) {
    radiotimer_init();
    uart_init();
    radio_init();
-   i2c_init();
-   sensors_init();
+   //i2c_init();
+   //sensors_init();
    my_SPI_init();
 }
 
@@ -283,6 +288,76 @@ static void button_my_init(void) {
     GPIOPinIntEnable(BSP_BUTTON_BASE, BSP_BUTTON_USER);
 }
 
+/*
+static void my_SPI_init(void)
+{   
+    //unsigned char *pucData;   
+    //unsigned long ulIdx; 
+    //
+    // Enable the SSI Peripherals
+    //
+    SysCtrlPeripheralEnable(SYS_CTRL_PERIPH_SSI0);
+//    SysCtrlPeripheralSleepEnable(SYS_CTRL_PERIPH_SSI0);
+
+    // Reset peripheral previous to configuring it
+//    SysCtrlPeripheralReset(SYS_CTRL_PERIPH_SSI0);
+
+    // 
+    // Disable SSI function before configuring module
+    //
+    SSIDisable(SSI0_BASE);
+   
+    //
+    //Configure the SSI pins. 
+    //The chip select is kept as a GPIO to gurantee the appropriate sigalling 
+    // to the Murata MEMS device 
+    //
+
+    // route peripheral output to IO pins    
+    IOCPinConfigPeriphOutput(GPIO_SSI_BASE, PIN_SSI_CLK, 
+                             IOC_MUX_OUT_SEL_SSI0_CLKOUT);    
+    
+    IOCPinConfigPeriphOutput(GPIO_SSI_BASE, PIN_SSI_FSS, 
+                             IOC_MUX_OUT_SEL_SSI0_FSSOUT);
+    
+    IOCPinConfigPeriphOutput(GPIO_SSI_BASE, PIN_SSI_TX, 
+                             IOC_MUX_OUT_SEL_SSI0_TXD);    
+    
+    IOCPinConfigPeriphInput(GPIO_SSI_BASE, PIN_SSI_RX, 
+                            IOC_SSIRXD_SSI0);    
+            
+    
+    GPIOPinTypeGPIOOutput(GPIO_SSI_BASE, PIN_SSI_FSS);
+    GPIOPinWrite(GPIO_SSI_BASE, PIN_SSI_FSS, PIN_SSI_FSS);   
+
+    // configure pins for use by SSI
+//    GPIOPinTypeSSI(GPIO_SSI_BASE, PIN_SSI_CLK |PIN_SSI_RX |PIN_SSI_TX);
+    GPIOPinTypeSSI(GPIO_SSI_BASE, PIN_SSI_CLK);
+    GPIOPinTypeSSI(GPIO_SSI_BASE, PIN_SSI_TX);
+    GPIOPinTypeSSI(GPIO_SSI_BASE, PIN_SSI_RX);
+
+//    SSIClockSourceSet(SSI0_BASE, SSI_CLOCK_SYSTEM);
+   
+    // Configure SSI module to Motorola/Freescale SPI mode 0:
+    // Polarity  = 0, SCK steady state is high
+    // Phase     = 0, Data changed on first and captured on second clock edge
+    // Word size = 8 bits
+    //
+    SSIConfigSetExpClk(SSI0_BASE, SysCtrlIOClockGet(), SSI_FRF_MOTO_MODE_3,
+                       SSI_MODE_MASTER, 115200, 8);
+    
+    //
+    // Enable the SSI0 module.
+    //
+    SSIEnable(SSI0_BASE);
+
+    // configure the Reset pin for CC1200, keep it stay high
+    GPIOPinTypeGPIOOutput(GPIO_B_BASE, PIN_SSI_RST);
+    GPIOPinWrite(GPIO_B_BASE, PIN_SSI_RST, PIN_SSI_RST);   
+}
+*/
+
+
 static void SysCtrlRunSetting(void) {
   /* Disable General Purpose Timers 0, 1, 2, 3 when running */
   SysCtrlPeripheralDisable(SYS_CTRL_PERIPH_GPT0);
@@ -381,7 +456,7 @@ static void GPIO_Cp3_Handler(void) {
     /* Disable the interrupts */
     // real process
     leds_debug_toggle(); 
-    usaki_pulse_cnt ++;
+    //usaki_pulse_cnt ++;
 
     GPIOPinIntClear(BSP_BUTTON_BASE, BSP_BUTTON_USER);
 }
