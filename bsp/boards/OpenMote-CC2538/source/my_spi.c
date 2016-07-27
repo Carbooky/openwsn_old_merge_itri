@@ -49,6 +49,7 @@
 // done using the polling method.
 //
 //*****************************************************************************
+/*
 void my_SPI_init(void){
  
   leds_sync_on();
@@ -85,14 +86,15 @@ void my_SPI_init(void){
   leds_sync_off();
 
 }
-/*
+*/
+
 void my_SPI_init(void)
 {   
     uint32_t ui32Dummy;
     // configure the Reset pin for CC1200, keep it stay high
-    GPIOPinTypeGPIOOutput(GPIO_SSI_BASE, PIN_SSI_RST);
+    GPIOPinTypeGPIOOutput(GPIO_SSI_RST_BASE, PIN_SSI_RST);
     //IOCPadConfigSet(GPIO_SSI_BASE, PIN_SSI_RST, IOC_OVERRIDE_OE);
-    GPIOPinWrite(GPIO_SSI_BASE, PIN_SSI_RST, PIN_SSI_RST);   
+    GPIOPinWrite(GPIO_SSI_RST_BASE, PIN_SSI_RST, PIN_SSI_RST);   
 
     //SysCtrlIOClockSet(SYS_CTRL_SYSDIV_32MHZ);
 
@@ -158,7 +160,6 @@ void my_SPI_init(void)
     trxSpiCmdStrobe(CC120X_SRES,1);
  
 }
-*/
 
 /*
 void my_SPI_init(void)
@@ -249,17 +250,18 @@ uint8_t my_SPI_send(uint16_t addr, uint8_t data){
 
          SSIDataPut(SSI0_BASE, byte1st);  // 0x30 SRES, reset CC1200
          while(!SSIBusy(SSI0_BASE));
-         for(i=0;i<10000;i++);
+         //for(i=0;i<10000;i++);
          SSIDataGet(SSI0_BASE, &rtn_data);    // read data from Rx FIFO
 
          SSIDataPut(SSI0_BASE, byte2nd);  // 0x30 SRES, reset CC1200
          while(!SSIBusy(SSI0_BASE));
-         for(i=0;i<10000;i++);
+         //for(i=0;i<10000;i++);
          SSIDataGet(SSI0_BASE, &rtn_data);    // read data from Rx FIFO
-         my_openserial_printStatus(0x16, (uint8_t*)&rtn_data, 4);
 
          //GPIOPinWrite(GPIO_D_BASE, PIN_SSI_FSS, PIN_SSI_FSS); 
          my_SPI0_deselect();
+
+         my_openserial_printStatus(0x16, (uint8_t*)&rtn_data, 4);
 
          return (uint8_t)rtn_data;
 }
@@ -275,17 +277,18 @@ uint8_t my_SPI_recv(uint16_t addr){
          my_SPI0_select();
 
          SSIDataPut (SSI0_BASE, byte1st);      
-         while(!SSIBusy(SSI0_BASE));
-         for(i=0;i<10000;i++);
-         SSIDataGet(SSI0_BASE, &rtn_data);    // read data from Rx FIFO
+         //wait until Tx start to send
+	 while(!SSIBusy(SSI0_BASE));
+         SSIDataGet(SSI0_BASE, &rtn_data);    // block read data from Rx FIFO
 
          SSIDataPut (SSI0_BASE, 0);
          while(!SSIBusy(SSI0_BASE));
-         for(i=0;i<10000;i++);
+         //for(i=0;i<10000;i++);
          SSIDataGet(SSI0_BASE, &rtn_data);    // read data from Rx FIFO
-         my_openserial_printStatus(0x17, (uint8_t*)&rtn_data, 4);
          //GPIOPinWrite(GPIO_D_BASE, PIN_SSI_FSS, PIN_SSI_FSS); 
          my_SPI0_deselect();
+
+         my_openserial_printStatus(0x17, (uint8_t*)&rtn_data, 4);
 
          return (uint8_t)rtn_data;
 }

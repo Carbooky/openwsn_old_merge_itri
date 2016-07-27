@@ -31,8 +31,7 @@
 
 //=========================== variables =======================================
 
-//#define BSP_ANTENNA_BASE                ( GPIO_D_BASE )
-#define BSP_ANTENNA_BASE                ( GPIO_C_BASE )
+#define BSP_ANTENNA_BASE                ( GPIO_D_BASE )
 #define BSP_ANTENNA_INT                 ( GPIO_PIN_5 )
 #define BSP_ANTENNA_EXT                 ( GPIO_PIN_4 )
 
@@ -44,7 +43,7 @@
 //=========================== prototypes ======================================
 
 // usaki_pulse_cnt is from openapp/usaki/usaki.c
-//extern uint16_t usaki_pulse_cnt;
+extern uint16_t usaki_pulse_cnt;
 
 void antenna_init(void);
 void antenna_internal(void);
@@ -68,8 +67,6 @@ static void SysCtrlWakeupSetting(void);
 //static void GPIO_C_Handler(void);
 static void GPIO_Cp3_Handler(void);
 
-//static void my_SPI_init(void);
-
 //=========================== main ============================================
 
 extern int mote_main(void);
@@ -84,22 +81,19 @@ void board_init(void) {
 
    gpio_init();
    clock_init();
-
    board_timer_init();
-
-   antenna_init();
-   antenna_external();
-
+   //antenna_init();
+   //antenna_external();
    leds_init();
    debugpins_init();
    //button_init();
-   button_my_init();
    bsp_timer_init();
    radiotimer_init();
    uart_init();
    radio_init();
-   //i2c_init();
-   //sensors_init();
+   i2c_init();
+   sensors_init();
+   button_my_init();
    my_SPI_init();
 }
 
@@ -456,7 +450,7 @@ static void GPIO_Cp3_Handler(void) {
     /* Disable the interrupts */
     // real process
     leds_debug_toggle(); 
-    //usaki_pulse_cnt ++;
+    usaki_pulse_cnt ++;
 
     GPIOPinIntClear(BSP_BUTTON_BASE, BSP_BUTTON_USER);
 }
