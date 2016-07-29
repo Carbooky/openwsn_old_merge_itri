@@ -137,7 +137,8 @@ void usaki_task_cb() {
    
    if(usaki_vars.counter == 1){
      send_buf[5] = 0x06;
-     CC1200WriteReg(CC120X_IOCFG2, &(send_buf[5]), 1);
+     my_SPI_send(CC120X_IOCFG2, send_buf[5]);
+     //CC1200WriteReg(CC120X_IOCFG2, &(send_buf[5]), 1);
    }
    else if(usaki_vars.counter == 2)  
      send_buf[3] = my_SPI_recv(CC120X_IOCFG2); 

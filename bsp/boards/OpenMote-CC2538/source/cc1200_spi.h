@@ -1,5 +1,28 @@
 #ifndef CC1200_SPI_H
 #define CC1200_SPI_H
+
+#include <stdint.h>
+#include "stdio.h"
+
+/*****************************************************************************/
+#define CC120X_CONST_TX_POWER_MAX       14
+#define RTIMER_SECOND                   1024
+/*---------------------------------------------------------------------------*/
+/*
+ * The default channel to use. 
+ *
+ * Permitted values depending on the data rate + band used are defined
+ * in the appropriate rf configuration file. Make sure the default value
+ * is within these limits!
+ */
+#define CC1200_CONF_DEFAULT_CHANNEL 0
+#ifdef CC1200_CONF_DEFAULT_CHANNEL
+#define CC1200_DEFAULT_CHANNEL          CC1200_CONF_DEFAULT_CHANNEL
+#else
+/* 868.325 MHz */
+#define CC1200_DEFAULT_CHANNEL          26
+#endif
+
 /******************************************************************************
  * CONSTANTS
  */
@@ -140,8 +163,8 @@
 #define CC120X_AGC_GAIN2                0x2F7A
 #define CC120X_AGC_GAIN1                0x2F7B
 #define CC120X_AGC_GAIN0                0x2F7C
-#define CC120X_CFM_RX_DATA_OUT         0x2F7D
-#define CC120X_CFM_TX_DATA_IN          0x2F7E
+#define CC120X_CFM_RX_DATA_OUT          0x2F7D
+#define CC120X_CFM_TX_DATA_IN           0x2F7E
 #define CC120X_ASK_SOFT_RX_DATA         0x2F7F
 #define CC120X_RNDGEN                   0x2F80
 #define CC120X_MAGN2                    0x2F81
@@ -208,12 +231,12 @@
 #define CC120X_AES_KEY8	                0x2FE7
 #define CC120X_AES_KEY7	                0x2FE8
 #define CC120X_AES_KEY6	                0x2FE9
-#define CC120X_AES_KEY5	                0x2FE10
-#define CC120X_AES_KEY4	                0x2FE11
-#define CC120X_AES_KEY3	                0x2FE12
-#define CC120X_AES_KEY2	                0x2FE13
-#define CC120X_AES_KEY1	                0x2FE14
-#define CC120X_AES_KEY0	                0x2FE15
+#define CC120X_AES_KEY5	                0x2FEA
+#define CC120X_AES_KEY4	                0x2FEB
+#define CC120X_AES_KEY3	                0x2FEC
+#define CC120X_AES_KEY2	                0x2FED
+#define CC120X_AES_KEY1	                0x2FEE
+#define CC120X_AES_KEY0	                0x2FEF
 
 /* AES Buffer */
 #define CC120X_AES_BUFFER               0x2FF0     /*  AES_BUFFER - Address for AES Buffer     */ 
@@ -227,12 +250,12 @@
 #define CC120X_AES_BUFFER8		0x2FF7
 #define CC120X_AES_BUFFER7		0x2FF8
 #define CC120X_AES_BUFFER6		0x2FF9
-#define CC120X_AES_BUFFER5		0x2FF10
-#define CC120X_AES_BUFFER4		0x2FF11
-#define CC120X_AES_BUFFER3		0x2FF12
-#define CC120X_AES_BUFFER2		0x2FF13
-#define CC120X_AES_BUFFER1		0x2FF14
-#define CC120X_AES_BUFFER0		0x2FF15
+#define CC120X_AES_BUFFER5		0x2FFA
+#define CC120X_AES_BUFFER4		0x2FFB
+#define CC120X_AES_BUFFER3		0x2FFC
+#define CC120X_AES_BUFFER2		0x2FFD
+#define CC120X_AES_BUFFER1		0x2FFE
+#define CC120X_AES_BUFFER0		0x2FFF
 
 #define CC120X_LQI_CRC_OK_BM            0x80
 #define CC120X_LQI_EST_BM               0x7F
@@ -262,5 +285,53 @@
 #define CC120X_STATE_SETTLING           0x50
 #define CC120X_STATE_RXFIFO_ERROR       0x60
 #define CC120X_STATE_TXFIFO_ERROR       0x70
+
+/*
+ * We export the register setup from SmartRF using the standard template
+ * "trxEB RF Settings Performance Line" and have therefore to typedef
+ * the following struct.
+ */
+typedef struct cc1200_registerSetting {
+  uint16_t addr;
+  uint8_t val;
+} registerSetting_t;
+/*---------------------------------------------------------------------------*/
+/* Map SmartRF typedef to reflect Contiki's naming conventions */
+typedef registerSetting_t cc1200_register_settings_t;
+
+/* This struct holds the complete configuration for a given mode */
+typedef struct cc1200_rf_cfg {
+  /* A string describing the mode */
+  const char *cfg_descriptor;
+  /* A pointer to a register setup exported from SmartRF */
+  const cc1200_register_settings_t *register_settings;
+  /* The size of the register setup */
+  size_t size_of_register_settings;
+  /*
+   * TX packet lifetime. Maximum duration of a TX packet including preamble,
+   * synch word + phy header, payload + CRC.
+   */
+  uint64_t tx_pkt_lifetime;
+  /* Base frequency in kHz */
+  uint32_t chan_center_freq0;
+  /* Channel spacing in kHz */
+  uint16_t chan_spacing;
+  /* The minimum channel */
+  uint8_t min_channel;
+  /* The maximum channel */
+  uint8_t max_channel;
+  /* The maximum output power in dBm */
+  int8_t max_txpower;
+  /*
+   * The carrier sense level used for CCA in dBm (int8_t). Limited by
+   * CC1200_CONST_CCA_THRESHOLD_MIN and CC1200_CONST_CCA_THRESHOLD_MAX.
+   */
+  int8_t cca_threshold;
+} cc1200_rf_cfg_t;
+
+/*---------------------------------------------------------------------------*/
+//extern cc1200_rf_cfg_t cc1200_802154g_863_870_fsk_50kbps;
+/*---------------------------------------------------------------------------*/
+
 
 #endif
