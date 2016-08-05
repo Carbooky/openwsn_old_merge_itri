@@ -21,6 +21,9 @@
 #include "schedule.h"
 #include "icmpv6rpl.h"
 
+//=========================== self defines =======================================
+//#define UART_DNOT_PRINT_STATUS  // to refrain openserial.c from using "...printStatus()"
+
 //=========================== variables =======================================
 
 openserial_vars_t openserial_vars;
@@ -92,10 +95,6 @@ void openserial_init() {
 }
 
 
-owerror_t openserial_printStatus(uint8_t statusElement,uint8_t* buffer, uint8_t length) {
-
-   return E_SUCCESS;
-}
 
 owerror_t my_openserial_printStatus(uint8_t statusElement,uint8_t* buffer, uint8_t length) {
    uint8_t i;
@@ -116,7 +115,14 @@ owerror_t my_openserial_printStatus(uint8_t statusElement,uint8_t* buffer, uint8
    
    return E_SUCCESS;
 }
-#if 0
+
+#ifdef UART_DNOT_PRINT_STATUS
+owerror_t openserial_printStatus(uint8_t statusElement,uint8_t* buffer, uint8_t length) {
+
+   return E_SUCCESS;
+}
+
+#else
 owerror_t openserial_printStatus(uint8_t statusElement,uint8_t* buffer, uint8_t length) {
    uint8_t i;
    INTERRUPT_DECLARATION();
@@ -325,7 +331,10 @@ void openserial_startInput() {
    );
    openserial_vars.reqFrameIdx = sizeof(openserial_vars.reqFrame);
 #else
-   //uart_writeByte(openserial_vars.reqFrame[openserial_vars.reqFrameIdx]);
+#ifdef UART_DNOT_PRINT_STATUS
+#else
+   uart_writeByte(openserial_vars.reqFrame[openserial_vars.reqFrameIdx]);
+#endif
 #endif
    ENABLE_INTERRUPTS();
 }

@@ -132,7 +132,7 @@ void usaki_task_cb() {
    if ((openudp_send(pkt))==E_FAIL) {
       openqueue_freePacketBuffer(pkt);
    }
-
+/*
    memset(send_buf,0,10);
    
    if(usaki_vars.counter == 1){
@@ -151,5 +151,5 @@ void usaki_task_cb() {
    send_buf[4]=usaki_vars.counter;
 
    my_openserial_printStatus(0x14, send_buf, 5);
-
+*/
 }

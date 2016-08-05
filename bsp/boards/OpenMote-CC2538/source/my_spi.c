@@ -57,7 +57,7 @@ static volatile uint8_t spi_locked = 0;
 void CC1200WriteReg(uint8_t ui8Addr, const uint8_t *pui8Buf, uint8_t ui8Len);
 /*****************************************************************************/
 
-#define CC1200_RF_TESTMODE 3
+//#define CC1200_RF_TESTMODE 3
 
 /* The RF configuration to be used. */
 #ifdef CC1200_CONF_RF_CFG
@@ -167,7 +167,7 @@ void cc1200_reg_configure(void){
   //printf("RF: Freq0 0x%02x\n",  ((uint8_t *)&freq)[0]);
   //printf("RF: Freq1 0x%02x\n",  ((uint8_t *)&freq)[1]);
   //printf("RF: Freq2 0x%02x\n",  ((uint8_t *)&freq)[2]);
-  my_openserial_printStatus(0x19, (uint8_t*)&freq, 4);
+  //my_openserial_printStatus(0x19, (uint8_t*)&freq, 4);
 
 #if (CC1200_RF_TESTMODE == 1)
   my_SPI_send(CC120X_SYNC_CFG1, 0xE8);
