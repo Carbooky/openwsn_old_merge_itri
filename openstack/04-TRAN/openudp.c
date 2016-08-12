@@ -44,6 +44,9 @@ void openudp_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
       case WKP_UDP_INJECT:
          uinject_sendDone(msg,error);
          break;
+      case WKP_UDP_SAKI:
+         usaki_sendDone(msg,error);
+         break;
       case WKP_UDP_RINGMASTER:
 	 //udpprint_sendDone(msg, error);
          rrt_sendDone(msg, error);
@@ -116,6 +119,9 @@ void openudp_receive(OpenQueueEntry_t* msg) {
          break;
       case WKP_UDP_INJECT:
          uinject_receive(msg);
+         break;
+      case WKP_UDP_SAKI:
+         usaki_receive(msg);
          break;
       default:
          openserial_printError(COMPONENT_OPENUDP,ERR_UNSUPPORTED_PORT_NUMBER,
