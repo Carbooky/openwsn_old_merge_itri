@@ -380,17 +380,19 @@ void uinject_task_cb() {
    // find code
    code |= 1 << UINJECT_CODE_MASK_SHOWPOWER;
    code |= 1 << UINJECT_CODE_MASK_WITHRSSI;
+   
    tmp_mask = 1 << UINJECT_CODE_MASK_NEEDACK;
    code &= ~tmp_mask;
    code |= (uint8_t)uinject_vars.needAck << UINJECT_CODE_MASK_NEEDACK;
+
    // update upload time value
-   tmp_mask = 0xfc << UINJECT_CODE_LOC_ULTIME;
-   code &= tmp_mask;
+   tmp_mask = 0x03 << UINJECT_CODE_LOC_ULTIME;
+   code &= ~tmp_mask;
    tmp_mask = uinject_vars.uinject_period_time_code << UINJECT_CODE_LOC_ULTIME;
    code |= tmp_mask;
 
-   tmp_mask = 0xfc << USAKI_CODE_LOC_ULTIME;
-   code &= tmp_mask;
+   tmp_mask = 0x03 << USAKI_CODE_LOC_ULTIME;
+   code &= ~tmp_mask;
    tmp_mask = uinject_vars.usaki_period_time_code << USAKI_CODE_LOC_ULTIME;
    code |= tmp_mask;
 
