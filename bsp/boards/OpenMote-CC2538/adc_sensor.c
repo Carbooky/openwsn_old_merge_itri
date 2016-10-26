@@ -27,7 +27,8 @@
 void adc_sensor_init(void) {
    //HWREG(CCTEST_TR0) |= CCTEST_TR0_ADCTM;
    //HWREG(RFCORE_XREG_ATEST) = 0x01;
-   SOCADCSingleConfigure(SOCADC_12_BIT, SOCADC_REF_INTERNAL);
+   //SOCADCSingleConfigure(SOCADC_12_BIT, SOCADC_REF_INTERNAL);
+   SOCADCSingleConfigure(SOCADC_12_BIT, SOCADC_REF_AVDD5);
    //adc_sens_read_temperature();
 }
 
