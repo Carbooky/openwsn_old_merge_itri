@@ -190,13 +190,15 @@ void antenna_internal(void) {
 
 static void gpio_init(void) {
     /* Set GPIOs as output */
-    GPIOPinTypeGPIOOutput(GPIO_A_BASE, 0xFF);
+    //GPIOPinTypeGPIOOutput(GPIO_A_BASE, 0xFF);
+    GPIOPinTypeGPIOInput(GPIO_A_BASE, 0xFF);
+    //GPIOPinTypeTimer(GPIO_A_BASE, GPIO_PIN_0);
     GPIOPinTypeGPIOOutput(GPIO_B_BASE, 0xFF);
     GPIOPinTypeGPIOOutput(GPIO_C_BASE, 0xFF);
     GPIOPinTypeGPIOOutput(GPIO_D_BASE, 0xFF);
 
     /* Initialize GPIOs to low */
-    GPIOPinWrite(GPIO_A_BASE, 0xFF, 0x00);
+    //GPIOPinWrite(GPIO_A_BASE, 0xFF, 0x00);
     GPIOPinWrite(GPIO_B_BASE, 0xFF, 0x00);
     GPIOPinWrite(GPIO_C_BASE, 0xFF, 0x00);
     GPIOPinWrite(GPIO_D_BASE, 0xFF, 0x00);
