@@ -125,12 +125,7 @@ bool neighbors_getPreferredParentEui64(open_addr_t* addressToWrite) {
    numNeighbors         = 0;
    minRankVal           = MAXDAGRANK;
    minRankIdx           = MAXNUMNEIGHBORS+1;
-   const uint8_t fake_addr[]= {0x00, 0x12, 0x4b, 0x00, 0x06, 0x15, 0xa6, 0x36};
-   open_addr_t fakeOpenAddr;
-
-   fakeOpenAddr.type = ADDR_NONE;
-   memcpy(fakeOpenAddr.addr_64b, fake_addr, 8);
-
+   
    //===== step 1. Try to find preferred parent
    for (i=0; i<MAXNUMNEIGHBORS; i++) {
       if (neighbors_vars.neighbors[i].used==TRUE){
@@ -159,10 +154,6 @@ bool neighbors_getPreferredParentEui64(open_addr_t* addressToWrite) {
       addressToWrite->type=ADDR_64B;
       foundPreferred=TRUE;         
    }
-   
-   memcpy(addressToWrite, &fakeOpenAddr, sizeof(open_addr_t));
-   addressToWrite->type=ADDR_64B;
-   foundPreferred=TRUE;         
    
    return foundPreferred;
 }
