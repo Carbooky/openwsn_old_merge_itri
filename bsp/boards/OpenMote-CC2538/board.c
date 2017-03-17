@@ -94,7 +94,7 @@ void board_init(void) {
    i2c_init();
    sensors_init();
    button_my_init();
-   my_SPI_init();
+   //my_SPI_init();
 }
 
 /**
