@@ -36,8 +36,10 @@ void usaki_init() {
    // clear local variables
    memset(&usaki_vars,0,sizeof(usaki_vars_t));
 
-   uinject_vars.usaki_period_time = UPLOAD_PERIOD_TIME_20MS;
-   uinject_vars.usaki_period_time_code = USAKI_SET_ULTIME_20_ABS;
+   //uinject_vars.usaki_period_time = UPLOAD_PERIOD_TIME_20MS;
+   //uinject_vars.usaki_period_time_code = USAKI_SET_ULTIME_20_ABS;
+   uinject_vars.usaki_period_time = UPLOAD_PERIOD_TIME_5MS;
+   uinject_vars.usaki_period_time_code = USAKI_SET_ULTIME_5_ABS;
    
    // start periodic timer
    usaki_vars.timerId                    = opentimers_start(

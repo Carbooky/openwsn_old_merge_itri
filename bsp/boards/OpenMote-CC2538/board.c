@@ -85,7 +85,7 @@ void board_init(void) {
    //antenna_init();
    //antenna_external();
    leds_init();
-   debugpins_init();
+   //debugpins_init();
    //button_init();
    bsp_timer_init();
    radiotimer_init();
