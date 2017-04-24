@@ -11,10 +11,13 @@
 #include "neighbors.h"
 #include "leds.h"
 #include "my_common.h"
+#include "gpio.h"
+#include <headers/hw_memmap.h>
 //=========================== variables =======================================
 
 extern usaki_vars_t usaki_vars;
 uinject_vars_t uinject_vars;
+uint8_t PC2_status = 0;
 
 static const uint8_t uinject_dst_addr[]   = {
    0xbb, 0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -35,8 +38,13 @@ static const uint8_t uinject_dst_addr[]   = {
 
 void uinject_timer_cb(opentimer_id_t id);
 void uinject_task_cb(void);
+void usaki_buzz_timer_cb(opentimer_id_t id);
+void usaki_buzz_task_cb(void);
+uint8_t PC2_alarm_on;
 
 //=========================== public ==========================================
+
+opentimer_id_t buzz_timer;
 
 bool isAck(void){
   
@@ -44,6 +52,23 @@ bool isAck(void){
     return TRUE;
   else
     return FALSE;
+}
+
+void alarm_on(void){
+   //opentimers_stop(buzz_timer);
+
+   opentimers_restart(buzz_timer);
+}
+
+void alarm_off(void){
+  
+  //opentimers_stop(buzz_timer);
+  GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+  GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+  GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+  GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+  GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+  
 }
 
 void uinject_init() {
@@ -56,8 +81,8 @@ void uinject_init() {
    uinject_vars.reTxNum = 0;
    uinject_vars.counter = 1;
    uinject_vars.rtnCounter = 0;
-   uinject_vars.uinject_period_time = UPLOAD_PERIOD_TIME_45MS;
-   uinject_vars.uinject_period_time_code = UINJECT_SET_ULTIME_45_ABS;
+   uinject_vars.uinject_period_time = UPLOAD_PERIOD_TIME_5MS;
+   uinject_vars.uinject_period_time_code = UINJECT_SET_ULTIME_5_ABS;
    
    // start periodic timer
    uinject_vars.timerId                    = opentimers_start(
@@ -65,7 +90,48 @@ void uinject_init() {
       TIMER_PERIODIC,TIME_MS,
       uinject_timer_cb
    );
+
+   //alarm_off();
+   GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+
+   PC2_alarm_on = 0;
+
+   buzz_timer = opentimers_start(
+      100,
+      TIMER_PERIODIC,TIME_MS,
+      usaki_buzz_timer_cb
+   );
+
+   GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+   GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+   GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+   //alarm_off();
+
 }
+
+void usaki_buzz_timer_cb(opentimer_id_t id){
+
+   scheduler_push_task(usaki_buzz_task_cb,TASKPRIO_COAP);
+}
+
+void usaki_buzz_task_cb(){
+
+  // periodically low/high to PC2
+  if (PC2_alarm_on == 1){
+    if (PC2_status){
+      // set high
+      GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+      PC2_status = 0;
+    }else{
+      // set low
+      GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, 0);
+      PC2_status = 1;
+    }
+  }else{
+    GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+  }
+}
+
 
 void uinject_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
    openqueue_freePacketBuffer(msg);
@@ -170,8 +236,8 @@ void uinject_receive(OpenQueueEntry_t* request) {
 //   uint16_t          temp_l4_destination_port;
 //   OpenQueueEntry_t* reply;
    uint8_t rcv_cmd;
-   uinject_recv_t * pkt = request->payload;
-   const uint8_t uinject_info[] = "ITRI MOTE";
+   uinject_recv_t * pkt = (uinject_recv_t*)request->payload;
+   //const uint8_t uinject_info[] = "ITRI MOTE";
    uint16_t serialNum;
 /*
    reply = openqueue_getFreePacketBuffer(COMPONENT_UINJECT);
@@ -245,6 +311,14 @@ void uinject_receive(OpenQueueEntry_t* request) {
         usaki_change_upload_time(pkt->serialNumL, usaki_vars.timerId);
         uinject_vars.usaki_period_time_code = pkt->serialNumL;
         leds_debug_toggle();
+      break;
+      case UALERT_SET_ON:
+        //alarm_on();
+	PC2_alarm_on = 1;	
+      break;
+      case UALERT_SET_OFF:
+        //alarm_off();
+	PC2_alarm_on = 0;	
       break;
       default:
         leds_debug_toggle();
@@ -359,9 +433,11 @@ void uinject_task_cb() {
    }
 
    rank                      = neighbors_getMyDAGrank();
+   //rank                      = icmpv6rpl_getMyDAGrank();
 
    // get parent 64b addr
    neighbors_getPreferredParentEui64(&tmp_addr);
+   //icmpv6rpl_getPreferredParentEui64(&tmp_addr);
    
    // assign parent short addr
    memset(parentShortAddr,0,2);
