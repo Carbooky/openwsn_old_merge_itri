@@ -34,6 +34,16 @@ static const uint8_t uinject_dst_addr[]   = {
 #define UINJECT_CODE_MASK_WITHRSSI   6
 #define USE_YYS_TOPOLOGY
 
+//#define USE_PC2_HIGH_ALARM
+
+#ifdef USE_PC2_HIGH_ALARM
+#define GPIO2_SET_ON GPIO_PIN_2 
+#define GPIO2_SET_OFF 0
+#else
+#define GPIO2_SET_ON 0 
+#define GPIO2_SET_OFF GPIO_PIN_2
+#endif
+
 //=========================== prototypes ======================================
 
 void uinject_timer_cb(opentimer_id_t id);
@@ -63,11 +73,11 @@ void alarm_on(void){
 void alarm_off(void){
   
   //opentimers_stop(buzz_timer);
-  GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
-  GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
-  GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
-  GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
-  GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+  GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO2_SET_ON);
+  GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO2_SET_ON);
+  GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO2_SET_ON);
+  GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO2_SET_ON);
+  GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO2_SET_ON);
   
 }
 
@@ -92,7 +102,7 @@ void uinject_init() {
    );
 
    //alarm_off();
-   GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+   GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO2_SET_ON);
 
    PC2_alarm_on = 0;
 
@@ -102,9 +112,9 @@ void uinject_init() {
       usaki_buzz_timer_cb
    );
 
-   GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
-   GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
-   GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+   GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO2_SET_ON);
+   GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO2_SET_ON);
+   GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO2_SET_ON);
    //alarm_off();
 
 }
@@ -120,15 +130,15 @@ void usaki_buzz_task_cb(){
   if (PC2_alarm_on == 1){
     if (PC2_status){
       // set high
-      GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+      GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO2_SET_ON);
       PC2_status = 0;
     }else{
       // set low
-      GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, 0);
+      GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO2_SET_OFF);
       PC2_status = 1;
     }
   }else{
-    GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO_PIN_2);
+    GPIOPinWrite(GPIO_C_BASE, GPIO_PIN_2, GPIO2_SET_ON);
   }
 }
 
